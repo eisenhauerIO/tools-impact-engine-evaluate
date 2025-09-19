@@ -1,4 +1,4 @@
-name: envs-weekly-review
+name: envs-eisenhauer-ai-arrow
 channels:
   - conda-forge
   - defaults
