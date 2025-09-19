@@ -1,0 +1,16 @@
+name: envs-weekly-review
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - numpy
+  - pandas
+  - scikit-learn
+  - jupyter
+  - matplotlib
+  - pip:
+      - strands-agents
+      - strands-agents-tools
+      - boto3
