@@ -8,16 +8,13 @@ A specialized Strands agent that is the orchestrator to utilize sub-agents and t
 
 """
 
-from strands import Agent
-from strands_tools import file_read, file_write, editor
-#from english_assistant import english_assistant
-#from language_assistant import language_assistant
-#from math_assistant import math_assistant
-#from computer_science_assistant import computer_science_assistant
-from assistants.general.tools import assist_tool as assist
+
+from framework.strands_agent import create_strands_agent
+
+from assistants import general_assistant
 
 # Define a focuseds system prompt for file operations
-TEACHER_SYSTEM_PROMPT = """
+ARROW_SYSTEM_PROMPT = """
 You are TeachAssist, a sophisticated educational orchestrator designed to coordinate educational support across multiple subjects. Your role is to:
 
 1. Analyze incoming student queries and determine the most appropriate specialized agent to handle them:
@@ -39,11 +36,12 @@ You are TeachAssist, a sophisticated educational orchestrator designed to coordi
 Always confirm your understanding before routing to ensure accurate assistance.
 """
 
+
 # Create a file-focused agent with selected tools
-arrow_agent = Agent(
-    system_prompt=TEACHER_SYSTEM_PROMPT,
+arrow_agent = create_strands_agent(
+    system_prompt=ARROW_SYSTEM_PROMPT,
+    tools=[general_assistant],
     callback_handler=None,
-    tools=[assist],
 )
 
 

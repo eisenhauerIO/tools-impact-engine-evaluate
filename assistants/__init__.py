@@ -1,1 +1,1 @@
-# This file marks the assistants module as a package.
+from .general.tools import general_assistant_tool as general_assistant
