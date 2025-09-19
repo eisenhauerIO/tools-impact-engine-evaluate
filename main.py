@@ -7,12 +7,14 @@ A specialized Strands agent that is the orchestrator to utilize sub-agents and t
 ## What This Example Shows
 
 """
-
+import os
 
 from framework.strands_agent import create_strands_agent
 
 from assistants import general_assistant
 
+
+os.environ['MOCK_WORKFLOW'] = 'True'
 
 # Create a file-focused agent with selected tools
 arrow_agent = create_strands_agent(
@@ -20,6 +22,8 @@ arrow_agent = create_strands_agent(
     tools=[general_assistant],
     callback_handler=None,
 )
+
+
 
 
 # Example usage
