@@ -14,3 +14,4 @@ dependencies:
       - strands-agents
       - strands-agents-tools
       - boto3
+      - ollama

@@ -10,17 +10,37 @@ A specialized Strands agent that is the orchestrator to utilize sub-agents and t
 import os
 
 from framework.strands_agent import create_strands_agent
+from strands.models import BedrockModel
+from strands.models.ollama import OllamaModel
 
 from assistants import general_assistant
 
 
 os.environ['MOCK_WORKFLOW'] = 'True'
 
+
+bedrock_model = BedrockModel(
+    model_id="us.anthropic.claude-sonnet-4-20250514-v1:0",
+    region_name="us-west-2"
+)
+
+
+ollama_model = OllamaModel(
+    host="http://localhost:11434",  # Ollama server address
+    model_id="mistral"              # Specify which model to use
+)
+
+
+model = bedrock_model 
+model = ollama_model  
+
+
 # Create a file-focused agent with selected tools
 arrow_agent = create_strands_agent(
     system_prompt=open("prompts/arrow.md").read(),
     tools=[general_assistant],
     callback_handler=None,
+    model=model
 )
 
 
@@ -35,7 +55,9 @@ if __name__ == "__main__":
 
     # Interactive loop
     while True:
+
         user_input = input("\n> ")
+        
         if user_input.lower() == "exit":
             print("\nGoodbye! 👋")
             break

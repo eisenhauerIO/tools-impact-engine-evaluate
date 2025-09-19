@@ -19,11 +19,6 @@ class GeneralAssistantAgent:
             "Answer this general knowledge question concisely, remembering to start by acknowledging that you are not an expert in this specific area: "
             + query
         )
-
-        print(os.environ['MOCK_WORKFLOW'])
-        raise AssertionError("Debugging")
-        if os.environ['MOCK_WORKFLOW'] == "True":
-            return "[MOCK RESPONSE] This is a simulated answer for testing purposes."
         try:
             response = str(self.agent(prompt))
             return response or "Sorry, I couldn't provide an answer to your question."
