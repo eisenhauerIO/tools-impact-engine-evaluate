@@ -1,5 +1,6 @@
 from strands import tool
-from assistants.general.general_assistant import GeneralAssistant
+
+from assistants.general.agent import GeneralAssistant
 
 assistant: GeneralAssistant | None = None  # injected at runtime
 

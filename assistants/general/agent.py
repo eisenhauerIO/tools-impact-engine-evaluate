@@ -1,5 +1,3 @@
-
-
 class GeneralAssistant:
     def __init__(self, store, model):
         self.store = store
