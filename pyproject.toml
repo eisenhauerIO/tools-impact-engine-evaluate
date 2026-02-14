@@ -1,0 +1,46 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "impact-engine-evaluate"
+version = "0.1.0"
+description = "Confidence scoring for the impact engine pipeline."
+authors = [
+  { name = "eisenhauerIO", email = "info@eisenhauer.io" }
+]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff", "pre-commit"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["impact_engine_evaluate"]
+
+[tool.hatch.envs.default]
+features = ["dev"]
+
+[tool.hatch.envs.default.scripts]
+test = "pytest impact_engine_evaluate/tests/ -v"
+lint = "ruff check ."
+format = "ruff format ."
+
+[tool.ruff]
+extend-exclude = ["_external"]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["D", "E", "F", "I"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D"]
+"**/tests/**" = ["D"]
+
+[tool.pytest.ini_options]
+addopts = "-v"
+testpaths = ["impact_engine_evaluate/tests"]
