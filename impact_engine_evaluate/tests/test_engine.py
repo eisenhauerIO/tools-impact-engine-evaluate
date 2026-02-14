@@ -1,6 +1,7 @@
 """Tests for ReviewEngine."""
 
 from impact_engine_evaluate.review.backends.base import Backend, BackendRegistry
+from impact_engine_evaluate.review.backends.deterministic import DeterministicBackend
 from impact_engine_evaluate.review.engine import ReviewEngine, _parse_dimensions, _parse_overall
 from impact_engine_evaluate.review.models import ArtifactPayload, ReviewDimension
 from impact_engine_evaluate.review.prompts.registry import PromptRegistry
@@ -134,3 +135,67 @@ def test_engine_review_with_prompt_override():
     )
     result = engine.review(payload, prompt_name="data_quality_review")
     assert result.prompt_name == "data_quality_review"
+
+
+# -- Deterministic backend through engine ------------------------------------
+
+
+def test_engine_deterministic_backend():
+    backend = DeterministicBackend()
+    registry = PromptRegistry()
+    engine = ReviewEngine(
+        backend=backend,
+        prompt_registry=registry,
+        default_prompt="study_design_review",
+    )
+
+    payload = ArtifactPayload(
+        initiative_id="init-det",
+        artifact_text="RCT with 500 participants",
+        model_type="experiment",
+        sample_size=500,
+    )
+    result = engine.review(payload)
+
+    assert result.initiative_id == "init-det"
+    assert result.backend_name == "deterministic"
+    assert result.prompt_name == "study_design_review"
+    assert len(result.dimensions) == 3
+    for dim in result.dimensions:
+        assert 0.85 <= dim.score <= 1.0, f"{dim.name} score out of experiment range"
+    assert 0.85 <= result.overall_score <= 1.0
+
+
+def test_engine_deterministic_is_reproducible():
+    backend = DeterministicBackend()
+    registry = PromptRegistry()
+    engine = ReviewEngine(
+        backend=backend,
+        prompt_registry=registry,
+        default_prompt="study_design_review",
+    )
+
+    payload = ArtifactPayload(
+        initiative_id="init-repro",
+        artifact_text="Observational cohort study, n=200",
+        model_type="observational",
+        sample_size=200,
+    )
+    r1 = engine.review(payload)
+    r2 = engine.review(payload)
+    assert r1.overall_score == r2.overall_score
+    assert [d.score for d in r1.dimensions] == [d.score for d in r2.dimensions]
+
+
+def test_engine_deterministic_via_from_config():
+    engine = ReviewEngine.from_config({"backend": {"type": "deterministic", "model": "deterministic"}})
+    payload = ArtifactPayload(
+        initiative_id="init-cfg",
+        artifact_text="Synthetic control study",
+        model_type="synthetic_control",
+        sample_size=300,
+    )
+    result = engine.review(payload)
+    assert result.backend_name == "deterministic"
+    assert len(result.dimensions) >= 1
+    assert 0.0 <= result.overall_score <= 1.0

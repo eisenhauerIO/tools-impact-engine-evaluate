@@ -12,7 +12,7 @@ def _auto_register() -> None:
     """Import concrete backends, silently skipping missing dependencies."""
     import importlib
 
-    for mod in ("anthropic_backend", "openai_backend", "litellm_backend"):
+    for mod in ("deterministic", "anthropic_backend", "openai_backend", "litellm_backend"):
         try:
             importlib.import_module(f"impact_engine_evaluate.review.backends.{mod}")
         except ImportError:
