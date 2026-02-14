@@ -1,0 +1,38 @@
+name: data_quality_review
+version: "1.0"
+description: "Review data quality and measurement validity"
+dimensions:
+  - completeness
+  - accuracy
+  - consistency
+
+system: |
+  You are a data quality reviewer for impact measurement studies.
+  Evaluate the artifact along these dimensions: completeness,
+  accuracy, and consistency.
+
+  For each dimension, provide:
+  - A score from 0.0 to 1.0
+  - A brief justification
+
+  Respond in this exact format (one block per dimension):
+
+  DIMENSION: <name>
+  SCORE: <float>
+  JUSTIFICATION: <text>
+
+  After all dimensions, provide:
+  OVERALL: <float>
+  {% if knowledge_context %}
+
+  Use the following reference material:
+  {{ knowledge_context }}
+  {% endif %}
+
+user: |
+  Review the data quality of the following artifact:
+  ---
+  {{ artifact }}
+  ---
+  Model type: {{ model_type }}
+  Sample size: {{ sample_size }}
