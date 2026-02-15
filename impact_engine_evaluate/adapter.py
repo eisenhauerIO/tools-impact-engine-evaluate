@@ -6,17 +6,13 @@ from impact_engine_evaluate.scorer import score_initiative
 
 logger = logging.getLogger(__name__)
 
-try:
-    from impact_engine_orchestrator.components.base import PipelineComponent
-except ImportError:
-    from abc import ABC, abstractmethod
+from typing import Protocol
 
-    class PipelineComponent(ABC):  # type: ignore[no-redef]
-        """Fallback base when orchestrator is not installed."""
 
-        @abstractmethod
-        def execute(self, event: dict) -> dict:
-            """Process event and return result."""
+class PipelineComponent(Protocol):
+    """Structural interface for pipeline stage components."""
+
+    def execute(self, event: dict) -> dict: ...
 
 
 class Evaluate(PipelineComponent):
