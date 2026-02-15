@@ -28,7 +28,7 @@ packages = ["impact_engine_evaluate"]
 features = ["dev"]
 
 [tool.hatch.envs.default.scripts]
-test = "pytest impact_engine_evaluate/tests/ -v"
+test = "pytest tests/ -v"
 lint = "ruff check ."
 format = "ruff format ."
 
@@ -48,4 +48,4 @@ convention = "numpy"
 
 [tool.pytest.ini_options]
 addopts = "-v"
-testpaths = ["impact_engine_evaluate/tests"]
+testpaths = ["tests"]
