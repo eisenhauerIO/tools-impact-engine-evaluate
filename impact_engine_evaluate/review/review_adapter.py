@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import asdict
+from typing import Protocol
 
 from impact_engine_evaluate.config import ReviewConfig, load_config
 from impact_engine_evaluate.review.engine import ReviewEngine
@@ -11,13 +12,13 @@ from impact_engine_evaluate.review.models import ArtifactPayload
 
 logger = logging.getLogger(__name__)
 
-from typing import Protocol
-
 
 class PipelineComponent(Protocol):
     """Structural interface for pipeline stage components."""
 
-    def execute(self, event: dict) -> dict: ...
+    def execute(self, event: dict) -> dict:
+        """Process event and return result."""
+        ...
 
 
 class ArtifactReview(PipelineComponent):

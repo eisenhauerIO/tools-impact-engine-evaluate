@@ -1,18 +1,19 @@
 """EVALUATE component: confidence scoring for the orchestrator pipeline."""
 
 import logging
+from typing import Protocol
 
 from impact_engine_evaluate.scorer import score_initiative
 
 logger = logging.getLogger(__name__)
 
-from typing import Protocol
-
 
 class PipelineComponent(Protocol):
     """Structural interface for pipeline stage components."""
 
-    def execute(self, event: dict) -> dict: ...
+    def execute(self, event: dict) -> dict:
+        """Process event and return result."""
+        ...
 
 
 class Evaluate(PipelineComponent):
