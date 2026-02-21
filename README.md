@@ -1,35 +1,22 @@
-# Impact Engine Evaluate
+# Impact Engine — Evaluate
 
-Confidence scoring for the impact engine pipeline.
+[![CI](https://github.com/eisenhauerIO/tools-impact-engine-evaluate/actions/workflows/ci.yaml/badge.svg)](https://github.com/eisenhauerIO/tools-impact-engine-evaluate/actions/workflows/ci.yaml)
+[![Docs](https://github.com/eisenhauerIO/tools-impact-engine-evaluate/actions/workflows/docs.yml/badge.svg?branch=main)](https://github.com/eisenhauerIO/tools-impact-engine-evaluate/actions/workflows/docs.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/eisenhauerIO/tools-impact-engine-evaluate/blob/main/LICENSE)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![Slack](https://img.shields.io/badge/Slack-Join%20Us-4A154B?logo=slack)](https://join.slack.com/t/eisenhauerioworkspace/shared_invite/zt-3lxtc370j-XLdokfTkno54wfhHVxvEfA)
 
-## Overview
+*Confidence scoring for causal impact estimates*
 
-This package implements deterministic confidence scoring based on the causal inference
-model type used during measurement. It plugs into the
-[impact engine orchestrator](https://github.com/eisenhauerIO/tools-impact-engine-orchestrator)
-as the **EVALUATE** component.
+How much you trust a causal estimate depends on the method that produced it. A randomized experiment with thousands of observations produces stronger evidence than a time series model on sparse data — but most pipelines treat all estimates equally.
 
-## Key Features
-
-- **Model-type confidence scoring** — each causal method maps to a confidence range
-- **Deterministic results** — same initiative always produces the same confidence
-- **Orchestrator integration** via `Evaluate` pipeline component
-
-## Installation
-
-```bash
-pip install -e .
-```
-
-For development:
-
-```bash
-pip install -e ".[dev]"
-```
+**Impact Engine — Evaluate** scores each estimate for reliability based on its measurement design. That score directly penalizes return estimates downstream: low confidence pulls returns toward worst-case scenarios, making the allocator conservative where evidence is weak and aggressive where evidence is strong.
 
 ## Quick Start
 
-### Standalone scorer
+```bash
+pip install git+https://github.com/eisenhauerIO/tools-impact-engine-evaluate.git
+```
 
 ```python
 from impact_engine_evaluate import score_initiative, ModelType
@@ -46,31 +33,19 @@ result = score_initiative({
 print(result["confidence"])  # 0.85–1.0 for experiments
 ```
 
-### As orchestrator component
+## Documentation
 
-```python
-from impact_engine_evaluate import Evaluate
-
-evaluator = Evaluate()
-
-event = {
-    "initiative_id": "init-001",
-    "model_type": ModelType.EXPERIMENT,
-    "ci_upper": 15.0,
-    "effect_estimate": 10.0,
-    "ci_lower": 5.0,
-    "cost_to_scale": 100.0,
-    "sample_size": 50,
-}
-
-result = evaluator.execute(event)
-# {"initiative_id": "init-001", "confidence": 0.92, "cost": 100.0, ...}
-```
+| Guide | Description |
+|-------|-------------|
+| [Usage](https://eisenhauerio.github.io/tools-impact-engine-evaluate/usage.html) | Getting started with basic workflow |
+| [Configuration](https://eisenhauerio.github.io/tools-impact-engine-evaluate/configuration.html) | All configuration options |
+| [Design](https://eisenhauerio.github.io/tools-impact-engine-evaluate/design.html) | System design and architecture |
 
 ## Development
 
 ```bash
-hatch run test      # Run tests
-hatch run lint      # Run linter
-hatch run format    # Format code
+hatch run test        # Run tests
+hatch run lint        # Run linter
+hatch run format      # Format code
+hatch run docs:build  # Build documentation
 ```
