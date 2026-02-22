@@ -13,3 +13,4 @@ docs/build/
 htmlcov/
 *.egg
 *.so
+.claude/.cache/
