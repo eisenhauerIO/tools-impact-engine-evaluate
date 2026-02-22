@@ -1,0 +1,1 @@
+../../.cache/utils-agentic-support/claude/ecosystems/impact-engine/feature-types/component.md

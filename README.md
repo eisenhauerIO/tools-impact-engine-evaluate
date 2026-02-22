@@ -37,9 +37,7 @@ print(result["confidence"])  # 0.85–1.0 for experiments
 
 | Guide | Description |
 |-------|-------------|
-| [Usage](https://eisenhauerio.github.io/tools-impact-engine-evaluate/usage.html) | Getting started with basic workflow |
-| [Configuration](https://eisenhauerio.github.io/tools-impact-engine-evaluate/configuration.html) | All configuration options |
-| [Design](https://eisenhauerio.github.io/tools-impact-engine-evaluate/design.html) | System design and architecture |
+| [Docs](https://eisenhauerio.github.io/tools-impact-engine-evaluate/) | Package documentation |
 
 ## Development
 
