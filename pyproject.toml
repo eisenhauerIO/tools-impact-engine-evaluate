@@ -29,7 +29,7 @@ features = ["dev"]
 
 [tool.hatch.envs.default.scripts]
 test = "pytest tests/ -v"
-lint = "ruff check ."
+lint = "ruff check . && ruff format --check ."
 format = "ruff format ."
 
 [tool.ruff]
