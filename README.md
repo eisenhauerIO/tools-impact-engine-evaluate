@@ -12,4 +12,4 @@ How much you trust a causal estimate depends on the method that produced it. A r
 
 **Impact Engine — Evaluate** scores each estimate for reliability based on its measurement design. That score directly penalizes return estimates downstream: low confidence pulls returns toward worst-case scenarios, making the allocator conservative where evidence is weak and aggressive where evidence is strong.
 
-[Documentation](https://eisenhauerio.github.io/tools-impact-engine-evaluate/)
+Visit our [documentation](https://eisenhauerio.github.io/tools-impact-engine-evaluate/) for details.
