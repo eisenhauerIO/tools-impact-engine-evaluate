@@ -24,6 +24,6 @@ jobs:
           python-version: "3.12"
 
       - name: Install Hatch
-        run: pip install hatch
+        run: pip install hatch "virtualenv<21"
 
       # Docs build step can be added when docs/ directory is created
