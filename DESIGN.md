@@ -48,36 +48,48 @@ MeasureResult ──► Deterministic Scorer ──► confidence score (0–1)
 
 ## Components
 
-### Existing — deterministic scorer
+### Unified Evaluate adapter
+
+The `Evaluate` pipeline component uses two-step dispatch: **strategy first,
+then model type**.
+
+1. `evaluate_strategy` (from `manifest.json`) → *how* to evaluate
+   (deterministic vs agentic)
+2. `model_type` → *what* to do within that strategy
+
+Both strategies return the same 8-key output dict for downstream ALLOCATE.
+
+`MethodReviewer` subclasses are the single source of truth for each model
+type. Each declares `confidence_range` (used by the deterministic path) and
+bundles prompt templates + knowledge + artifact loading (used by the agentic
+path). The `ModelType` enum and `CONFIDENCE_MAP` dict have been removed —
+the registry keys (strings) are the canonical model type identifiers.
 
 | File | Role |
 |------|------|
-| `scorer.py` | Pure function `score_initiative()` — maps `ModelType` to a confidence range via `CONFIDENCE_MAP`, draws a deterministic score seeded by `initiative_id` |
-| `adapter.py` | `Evaluate` PipelineComponent wrapping the scorer |
-
-These are unchanged by the review subsystem.
+| `scorer.py` | Pure function `score_initiative(event, confidence_range)` — draws a deterministic score seeded by `initiative_id` within the given range |
+| `job_reader.py` | `load_scorer_event(manifest, job_dir)` — reads `impact_results.json` and builds a flat scorer event dict |
+| `adapter.py` | `Evaluate` PipelineComponent — reads manifest, dispatches on `evaluate_strategy`, returns common output |
 
 ### Review subsystem
 
 | File | Role |
 |------|------|
 | `review/models.py` | Data models: `ReviewResult`, `ReviewDimension`, `ArtifactPayload`, `PromptSpec` |
-| `review/engine.py` | `ReviewEngine` — orchestrates a single review: load prompt, retrieve knowledge, render template, call backend, parse response |
+| `review/engine.py` | `ReviewEngine` — orchestrates a single review: load prompt, render template, call backend, parse response |
+| `review/api.py` | Public `review(job_dir)` function — end-to-end review of a job directory |
+| `review/manifest.py` | `Manifest` dataclass + `load_manifest()` + `update_manifest()` |
 | `review/backends/base.py` | `Backend` ABC + `BackendRegistry` (decorator-based registration) |
 | `review/backends/anthropic_backend.py` | Anthropic Messages API backend |
 | `review/backends/openai_backend.py` | OpenAI Chat Completions backend |
 | `review/backends/litellm_backend.py` | LiteLLM unified backend (100+ providers) |
-| `review/prompts/registry.py` | `PromptRegistry` — discovers YAML templates from built-in and user-supplied directories |
-| `review/prompts/renderer.py` | Jinja2 template rendering (falls back to `str.format_map`) |
-| `review/prompts/templates/*.yaml` | Built-in prompt templates |
-| `review/knowledge/base.py` | `KnowledgeBase` ABC + `Chunk` dataclass |
-| `review/knowledge/static.py` | `StaticKnowledgeBase` — keyword-overlap retrieval from `.md`/`.txt` files |
-| `review/review_adapter.py` | `ArtifactReview` PipelineComponent wrapping `ReviewEngine` |
+| `review/methods/base.py` | `MethodReviewer` ABC + `MethodReviewerRegistry` |
+| `review/methods/experiment/` | Experiment (RCT) reviewer with prompt templates and knowledge |
 | `config.py` | `ReviewConfig` — loads from YAML/dict/env vars |
 
 ### Registry pattern
 
-All three pluggable dimensions use the same idiom:
+Both pluggable dimensions use the same idiom:
 
 ```python
 @BackendRegistry.register("anthropic")
@@ -97,56 +109,39 @@ The orchestrator pipeline flows:
 MEASURE ──► EVALUATE ──► ALLOCATE ──► SCALE
 ```
 
-The Measure → Evaluate contract (from the orchestrator) passes:
+The orchestrator passes a job directory reference to `Evaluate.execute()`:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `initiative_id` | str | Unique identifier |
-| `effect_estimate` | float | Point estimate of causal effect |
-| `ci_lower` / `ci_upper` | float | Confidence interval bounds |
-| `p_value` | float | Statistical significance |
-| `sample_size` | int | Number of observations |
-| `model_type` | ModelType | Methodology used |
-| `diagnostics` | dict | Model fit diagnostics |
+| `job_dir` | str | Path to the job directory containing `manifest.json` |
+| `cost_to_scale` | float | (optional) Override for cost from the orchestrator |
 
-### Measure output structure
+The manifest's `evaluate_strategy` field (default: `"agentic"`) controls
+the evaluation approach. Both deterministic and agentic paths read scenario
+returns from `impact_results.json` via `load_scorer_event()`.
 
-The `MeasureJobResult` from `tools-impact-engine-measure` contains richer data
-than the orchestrator contract. The `impact_results.json` envelope:
+The `evaluate_strategy` field in `manifest.json`:
+- `"deterministic"` — uses `reviewer.confidence_range` for fast scoring
+- `"agentic"` — runs the full LLM review pipeline (default)
+
+### Scorer event contract
+
+`load_scorer_event()` reads flat top-level keys from `impact_results.json`:
 
 ```json
 {
-  "schema_version": "2.0",
-  "model_type": "interrupted_time_series",
-  "data": {
-    "model_params": {
-      "intervention_date": "2024-01-15",
-      "dependent_variable": "revenue"
-    },
-    "impact_estimates": {
-      "intervention_effect": 12.5,
-      "pre_intervention_mean": 100.0,
-      "post_intervention_mean": 112.5,
-      "absolute_change": 12.5,
-      "percent_change": 12.5
-    },
-    "model_summary": {
-      "n_observations": 365,
-      "pre_period_length": 200,
-      "post_period_length": 165,
-      "aic": 1234.5,
-      "bic": 1245.8
-    }
-  },
-  "metadata": {
-    "executed_at": "2025-06-01T12:00:00+00:00"
-  }
+  "ci_upper": 15.0,
+  "effect_estimate": 10.0,
+  "ci_lower": 5.0,
+  "cost_to_scale": 100.0,
+  "sample_size": 50
 }
 ```
 
-The review assistant operates on a text serialization of this data, passed as
-`artifact_text` in the `ArtifactPayload`. The exact serialization format is
-deferred to a later phase (see PLAN.md).
+The agentic review path reads the same file as raw text via
+`reviewer.load_artifact()`, so the full measure output (nested model params,
+diagnostics, etc.) is preserved for the LLM reviewer even though the scorer
+only uses the flat keys above.
 
 ### Review input
 
@@ -214,7 +209,7 @@ JSON fallback parsing is also supported.
 
 ## Configuration
 
-A single YAML file or dict configures the full stack:
+A single YAML file or dict configures the backend:
 
 ```yaml
 backend:
@@ -222,28 +217,17 @@ backend:
   model: claude-sonnet-4-5-20250929
   temperature: 0.0
   max_tokens: 4096
-
-prompt:
-  name: impact_results_review
-  template_dirs:
-    - ./custom_prompts
-
-knowledge:
-  type: static
-  path: ./knowledge_base
-  top_k: 5
 ```
 
 Environment variable overrides: `REVIEW_BACKEND_TYPE`, `REVIEW_BACKEND_MODEL`,
-`REVIEW_PROMPT_NAME`, etc.
+`REVIEW_BACKEND_TEMPERATURE`, `REVIEW_BACKEND_MAX_TOKENS`.
 
 ## Dependency strategy
 
 | Component | Core dependency | Optional extra |
 |-----------|----------------|----------------|
 | Engine, models | None | — |
-| PromptRegistry, renderer | None | `jinja2` (graceful fallback) |
-| StaticKnowledgeBase | None | — |
+| Template rendering | None | `jinja2` (graceful fallback) |
 | AnthropicBackend | No | `anthropic` |
 | OpenAIBackend | No | `openai` |
 | LiteLLMBackend | No | `litellm` |

@@ -5,13 +5,13 @@ self-contained deliverable. See DESIGN.md for architectural context.
 
 ## Current state
 
-The review subsystem scaffolding is complete and tested (45 tests passing):
+The evaluate package is complete through Phase 1.5 (74 tests passing):
 
+- Unified `Evaluate` adapter with deterministic and agentic strategy dispatch
+- `MethodReviewer` registry as single source of truth for model types
 - Review engine with `from_config()` and `review()`
 - Three LLM backends (Anthropic, OpenAI, LiteLLM) via registry
-- Prompt registry with Jinja2 rendering and two generic templates
-- Static keyword-based knowledge base
-- `ArtifactReview` pipeline component adapter
+- Experiment (RCT) reviewer with prompt templates and knowledge base
 - Unified configuration with YAML + env var support
 
 ## Phase 0 — Design docs
@@ -23,7 +23,7 @@ The review subsystem scaffolding is complete and tested (45 tests passing):
 
 ## Phase 1 — Method reviewer registry + job directory API
 
-**Status**: next
+**Status**: complete
 
 **Goal**: Introduce method as the primary extensibility dimension with a
 registration pattern, and expose a job-directory-based public API. An external
@@ -130,12 +130,11 @@ class MethodReviewer(ABC):
     name: str = ""
     prompt_name: str = ""
     description: str = ""
+    confidence_range: tuple[float, float] = (0.0, 0.0)  # added in Phase 1.5
 
     @abstractmethod
-    def load_artifact(self, manifest: Manifest) -> ArtifactPayload:
-        """Read artifact files per manifest, serialize to text.
-        No schema coupling — the prompt + knowledge guide interpretation.
-        """
+    def load_artifact(self, manifest: Manifest, job_dir: Path) -> ArtifactPayload:
+        """Read artifact files per manifest, serialize to text."""
         ...
 
     def prompt_template_dir(self) -> Path | None:
@@ -200,6 +199,35 @@ External packages follow the same structure. Resource location via
 | `tests/test_method_registry.py` | Registry mechanics |
 | `tests/test_experiment_review.py` | Experiment reviewer, prompt, knowledge |
 | `tests/test_review_api.py` | End-to-end API test |
+
+## Phase 1.5 — Unified strategy dispatch
+
+**Status**: complete
+
+**Goal**: Merge the deterministic scorer and agentic review into a single
+`Evaluate.execute()` that reads a job directory, selects a strategy from the
+manifest, and returns a common output contract.
+
+### Key changes
+
+- **`Manifest.evaluate_strategy`**: new field (default `"agentic"`) that
+  controls which evaluation path to use.
+- **`MethodReviewer.confidence_range`**: each reviewer declares its
+  deterministic confidence bounds. The `ModelType` enum and `CONFIDENCE_MAP`
+  dict are removed — the registry is the single source of truth.
+- **`score_initiative(event, confidence_range)`**: takes an explicit range
+  parameter instead of looking up `model_type` in `CONFIDENCE_MAP`.
+- **`load_scorer_event(manifest, job_dir)`**: shared reader that builds a
+  flat scorer event dict from `impact_results.json`.
+- **`Evaluate` adapter**: reads manifest, dispatches on `evaluate_strategy`,
+  both paths return the same 8-key dict.
+
+### Confidence semantic
+
+- **Deterministic path**: confidence is drawn from the reviewer's
+  `confidence_range`, seeded by `initiative_id` (reproducible).
+- **Agentic path**: confidence is the LLM-derived `overall_score` from
+  `ReviewResult` (non-deterministic, content-aware).
 
 ## Phase 2 — Additional method reviewers
 

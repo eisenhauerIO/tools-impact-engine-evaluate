@@ -72,3 +72,19 @@ def test_method_reviewer_default_dirs():
     assert reviewer.prompt_template_dir() is None
     assert reviewer.knowledge_content_dir() is None
     del MethodReviewerRegistry._methods["_test_no_dirs"]
+
+
+def test_registered_reviewers_have_confidence_range():
+    """Every registered reviewer has a non-default confidence_range."""
+    for name in MethodReviewerRegistry.available():
+        reviewer = MethodReviewerRegistry.create(name)
+        lo, hi = reviewer.confidence_range
+        assert lo > 0.0 or hi > 0.0, f"{name} has default (0.0, 0.0) confidence_range"
+        assert lo <= hi, f"{name} has inverted confidence_range: ({lo}, {hi})"
+
+
+def test_confidence_map():
+    """confidence_map() returns a dict keyed by method name."""
+    cmap = MethodReviewerRegistry.confidence_map()
+    assert "experiment" in cmap
+    assert cmap["experiment"] == (0.85, 1.0)

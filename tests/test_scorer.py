@@ -1,39 +1,42 @@
 """Tests for the pure scoring logic."""
 
-from impact_engine_evaluate.scorer import CONFIDENCE_MAP, ModelType, score_initiative
+from impact_engine_evaluate.scorer import score_initiative
+
+EXPERIMENT_RANGE = (0.85, 1.0)
 
 
-def test_confidence_within_range(sample_measure_event):
-    """Confidence falls within the expected range for the model type."""
-    result = score_initiative(sample_measure_event)
-    lo, hi = CONFIDENCE_MAP[sample_measure_event["model_type"]]
-    assert lo <= result["confidence"] <= hi
+def test_confidence_within_range(sample_scorer_event):
+    """Confidence falls within the given confidence range."""
+    result = score_initiative(sample_scorer_event, EXPERIMENT_RANGE)
+    assert EXPERIMENT_RANGE[0] <= result["confidence"] <= EXPERIMENT_RANGE[1]
 
 
-def test_return_mapping(sample_measure_event):
-    """Return fields map correctly from measure result inputs."""
-    result = score_initiative(sample_measure_event)
-    assert result["return_worst"] == sample_measure_event["ci_lower"]
-    assert result["return_median"] == sample_measure_event["effect_estimate"]
-    assert result["return_best"] == sample_measure_event["ci_upper"]
+def test_return_mapping(sample_scorer_event):
+    """Return fields map correctly from event inputs."""
+    result = score_initiative(sample_scorer_event, EXPERIMENT_RANGE)
+    assert result["return_worst"] == sample_scorer_event["ci_lower"]
+    assert result["return_median"] == sample_scorer_event["effect_estimate"]
+    assert result["return_best"] == sample_scorer_event["ci_upper"]
 
 
-def test_determinism(sample_measure_event):
+def test_determinism(sample_scorer_event):
     """Same initiative_id always produces the same confidence."""
-    r1 = score_initiative(sample_measure_event)
-    r2 = score_initiative(sample_measure_event)
+    r1 = score_initiative(sample_scorer_event, EXPERIMENT_RANGE)
+    r2 = score_initiative(sample_scorer_event, EXPERIMENT_RANGE)
     assert r1["confidence"] == r2["confidence"]
 
 
-def test_all_model_types_have_confidence_map():
-    """Every ModelType has a corresponding CONFIDENCE_MAP entry."""
-    for mt in ModelType:
-        assert mt in CONFIDENCE_MAP, f"{mt} missing from CONFIDENCE_MAP"
+def test_model_type_is_string(sample_scorer_event):
+    """Model type in result is a plain string."""
+    result = score_initiative(sample_scorer_event, EXPERIMENT_RANGE)
+    assert isinstance(result["model_type"], str)
+    assert result["model_type"] == "experiment"
 
 
-def test_all_model_types_produce_valid_confidence(all_model_events):
-    """Confidence is within range for every model type."""
-    for event in all_model_events:
-        result = score_initiative(event)
-        lo, hi = CONFIDENCE_MAP[event["model_type"]]
-        assert lo <= result["confidence"] <= hi, f"Failed for {event['model_type']}"
+def test_different_ranges_produce_different_confidence(sample_scorer_event):
+    """Different confidence ranges produce different scores for the same event."""
+    r1 = score_initiative(sample_scorer_event, (0.85, 1.0))
+    r2 = score_initiative(sample_scorer_event, (0.20, 0.39))
+    assert r1["confidence"] != r2["confidence"]
+    assert 0.85 <= r1["confidence"] <= 1.0
+    assert 0.20 <= r2["confidence"] <= 0.39

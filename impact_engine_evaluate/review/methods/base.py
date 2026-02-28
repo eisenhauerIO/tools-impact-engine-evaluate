@@ -24,11 +24,14 @@ class MethodReviewer(ABC):
         Filename stem of the prompt template YAML.
     description : str
         Human-readable description of the methodology.
+    confidence_range : tuple[float, float]
+        ``(lower, upper)`` bounds for deterministic confidence scoring.
     """
 
     name: str = ""
     prompt_name: str = ""
     description: str = ""
+    confidence_range: tuple[float, float] = (0.0, 0.0)
 
     @abstractmethod
     def load_artifact(self, manifest: Manifest, job_dir: Path) -> ArtifactPayload:
@@ -123,3 +126,8 @@ class MethodReviewerRegistry:
     def available(cls) -> list[str]:
         """Return sorted list of registered method names."""
         return sorted(cls._methods)
+
+    @classmethod
+    def confidence_map(cls) -> dict[str, tuple[float, float]]:
+        """Return ``{name: confidence_range}`` for all registered methods."""
+        return {name: klass.confidence_range for name, klass in cls._methods.items()}

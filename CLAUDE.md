@@ -23,6 +23,18 @@ pip install -e ".[dev]"
 - `impact_engine_evaluate/adapter.py` — orchestrator integration (`Evaluate`)
 - `impact_engine_evaluate/tests/` — unit tests
 
+## Verification
+
+After implementation, run in order:
+
+1. `hatch run test` — all tests pass
+2. `hatch run lint` — no ruff violations
+3. Launch **code-reviewer** subagent (`.claude/subagents/code-reviewer.md`) on the diff
+4. Launch **design-reviewer** subagent (`.claude/subagents/design-reviewer.md`) on the diff
+5. Push to branch and confirm GitHub Actions CI passes
+
+A plan is not complete until all steps are green.
+
 ## Key conventions
 
 - NumPy-style docstrings

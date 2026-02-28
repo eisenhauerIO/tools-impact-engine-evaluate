@@ -92,3 +92,21 @@ def test_manifest_defaults():
     assert manifest.created_at == ""
     assert manifest.files == {}
     assert manifest.initiative_id == ""
+    assert manifest.evaluate_strategy == "agentic"
+
+
+def test_load_manifest_evaluate_strategy():
+    """Explicit evaluate_strategy is read from manifest."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        data = {**SAMPLE_MANIFEST, "evaluate_strategy": "deterministic"}
+        _write_manifest(tmpdir, data)
+        manifest = load_manifest(tmpdir)
+        assert manifest.evaluate_strategy == "deterministic"
+
+
+def test_load_manifest_evaluate_strategy_default():
+    """Missing evaluate_strategy defaults to agentic."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        _write_manifest(tmpdir, SAMPLE_MANIFEST)
+        manifest = load_manifest(tmpdir)
+        assert manifest.evaluate_strategy == "agentic"

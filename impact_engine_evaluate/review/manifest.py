@@ -45,6 +45,10 @@ class Manifest:
         Mapping of logical names to file entries.
     initiative_id : str
         Initiative identifier. Defaults to the job directory name.
+    evaluate_strategy : str
+        Evaluation strategy: ``"agentic"`` (LLM review) or
+        ``"deterministic"`` (confidence range scoring). Defaults to
+        ``"agentic"``.
     """
 
     schema_version: str
@@ -52,6 +56,7 @@ class Manifest:
     created_at: str = ""
     files: dict[str, FileEntry] = field(default_factory=dict)
     initiative_id: str = ""
+    evaluate_strategy: str = "agentic"
 
 
 def load_manifest(job_dir: str | Path) -> Manifest:
@@ -103,6 +108,7 @@ def load_manifest(job_dir: str | Path) -> Manifest:
         created_at=data.get("created_at", ""),
         files=files,
         initiative_id=initiative_id,
+        evaluate_strategy=data.get("evaluate_strategy", "agentic"),
     )
 
 

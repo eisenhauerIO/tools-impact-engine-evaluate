@@ -26,6 +26,7 @@ class ExperimentReviewer(MethodReviewer):
     name = "experiment"
     prompt_name = "experiment_review"
     description = "Review experimental (RCT) impact measurement artifacts."
+    confidence_range = (0.85, 1.0)
 
     def load_artifact(self, manifest: Manifest, job_dir: Path) -> ArtifactPayload:
         """Read artifact files from the job directory.
