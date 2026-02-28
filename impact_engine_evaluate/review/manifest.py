@@ -46,9 +46,8 @@ class Manifest:
     initiative_id : str
         Initiative identifier. Defaults to the job directory name.
     evaluate_strategy : str
-        Evaluation strategy: ``"agentic"`` (LLM review) or
-        ``"deterministic"`` (confidence range scoring). Defaults to
-        ``"agentic"``.
+        Evaluation strategy: ``"review"`` (LLM review) or
+        ``"score"`` (deterministic confidence). Defaults to ``"review"``.
     """
 
     schema_version: str
@@ -56,7 +55,7 @@ class Manifest:
     created_at: str = ""
     files: dict[str, FileEntry] = field(default_factory=dict)
     initiative_id: str = ""
-    evaluate_strategy: str = "agentic"
+    evaluate_strategy: str = "review"
 
 
 def load_manifest(job_dir: str | Path) -> Manifest:
@@ -108,32 +107,5 @@ def load_manifest(job_dir: str | Path) -> Manifest:
         created_at=data.get("created_at", ""),
         files=files,
         initiative_id=initiative_id,
-        evaluate_strategy=data.get("evaluate_strategy", "agentic"),
+        evaluate_strategy=data.get("evaluate_strategy", "review"),
     )
-
-
-def update_manifest(job_dir: str | Path, key: str, entry: FileEntry) -> None:
-    """Append a file entry to an existing manifest.
-
-    Parameters
-    ----------
-    job_dir : str | Path
-        Path to the job directory.
-    key : str
-        Logical name for the file entry.
-    entry : FileEntry
-        The file entry to add.
-    """
-    job_dir = Path(job_dir)
-    manifest_path = job_dir / MANIFEST_FILENAME
-
-    with open(manifest_path, encoding="utf-8") as fh:
-        data: dict[str, Any] = json.load(fh)
-
-    data.setdefault("files", {})[key] = {"path": entry.path, "format": entry.format}
-
-    with open(manifest_path, "w", encoding="utf-8") as fh:
-        json.dump(data, fh, indent=2)
-        fh.write("\n")
-
-    logger.debug("Updated manifest %s: added %s", manifest_path, key)

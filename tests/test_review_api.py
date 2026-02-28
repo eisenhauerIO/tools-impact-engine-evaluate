@@ -78,10 +78,10 @@ def test_review_end_to_end(mock_registry_cls):
     written = json.loads(result_path.read_text())
     assert written["overall_score"] == 0.80
 
-    # Manifest updated
+    # Manifest must not be mutated
     with open(Path(job_dir) / "manifest.json") as fh:
         manifest_data = json.load(fh)
-    assert "review_result" in manifest_data["files"]
+    assert "review_result" not in manifest_data.get("files", {})
 
 
 @patch.object(_engine_mod, "BackendRegistry")

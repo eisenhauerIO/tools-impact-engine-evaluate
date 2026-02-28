@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from impact_engine_evaluate.review.manifest import FileEntry, Manifest, load_manifest, update_manifest
+from impact_engine_evaluate.review.manifest import FileEntry, Manifest, load_manifest
 
 SAMPLE_MANIFEST = {
     "schema_version": "2.0",
@@ -66,21 +66,6 @@ def test_load_manifest_missing_required_field():
             load_manifest(tmpdir)
 
 
-def test_update_manifest():
-    with tempfile.TemporaryDirectory() as tmpdir:
-        _write_manifest(tmpdir, SAMPLE_MANIFEST)
-        update_manifest(tmpdir, "review_result", FileEntry(path="review_result.json", format="json"))
-
-        # Re-read and verify
-        with open(Path(tmpdir) / "manifest.json") as fh:
-            data = json.load(fh)
-        assert "review_result" in data["files"]
-        assert data["files"]["review_result"]["path"] == "review_result.json"
-        assert data["files"]["review_result"]["format"] == "json"
-        # Original entries preserved
-        assert "impact_results" in data["files"]
-
-
 def test_file_entry_fields():
     entry = FileEntry(path="results.json", format="json")
     assert entry.path == "results.json"
@@ -92,21 +77,21 @@ def test_manifest_defaults():
     assert manifest.created_at == ""
     assert manifest.files == {}
     assert manifest.initiative_id == ""
-    assert manifest.evaluate_strategy == "agentic"
+    assert manifest.evaluate_strategy == "review"
 
 
 def test_load_manifest_evaluate_strategy():
     """Explicit evaluate_strategy is read from manifest."""
     with tempfile.TemporaryDirectory() as tmpdir:
-        data = {**SAMPLE_MANIFEST, "evaluate_strategy": "deterministic"}
+        data = {**SAMPLE_MANIFEST, "evaluate_strategy": "score"}
         _write_manifest(tmpdir, data)
         manifest = load_manifest(tmpdir)
-        assert manifest.evaluate_strategy == "deterministic"
+        assert manifest.evaluate_strategy == "score"
 
 
 def test_load_manifest_evaluate_strategy_default():
-    """Missing evaluate_strategy defaults to agentic."""
+    """Missing evaluate_strategy defaults to review."""
     with tempfile.TemporaryDirectory() as tmpdir:
         _write_manifest(tmpdir, SAMPLE_MANIFEST)
         manifest = load_manifest(tmpdir)
-        assert manifest.evaluate_strategy == "agentic"
+        assert manifest.evaluate_strategy == "review"

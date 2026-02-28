@@ -1,74 +1,59 @@
-# Design: Agentic Review Assistant for Impact Measurement Results
+# Design: Agentic Review Assistant
 
 ## Motivation
 
-The impact engine pipeline produces causal effect estimates through
-`tools-impact-engine-measure`. These results — point estimates, confidence
-intervals, model diagnostics — require expert judgement to interpret. Is the
-effect estimate plausible? Is the model type appropriate for the data? Are the
-diagnostics healthy?
+Upstream pipeline stages produce structured artifacts — point estimates,
+confidence intervals, model diagnostics — that require expert judgement to
+interpret. Is the effect estimate plausible? Is the model type appropriate for
+the data? Are the diagnostics healthy?
 
-The agentic review layer adds LLM-powered evaluation of the actual measurement
-artifacts, producing structured, auditable review judgements. A lightweight
-deterministic scorer (`scorer.py`) is included for debugging, testing, and
-illustration — it assigns a confidence band based on methodology type alone
-without examining the content of the results.
+The evaluate package provides a general-purpose agentic review layer that
+accepts any job directory conforming to the manifest convention, producing
+structured, auditable review judgements. A lightweight deterministic scorer
+(`score/scorer.py`) is included for debugging, testing, and illustration — it
+assigns a confidence band based on methodology type alone without examining
+the content of the results.
 
-```
-MeasureResult ──► Agentic Reviewer      ──► per-dimension scores + justifications
-             └──► Deterministic Scorer  ──► confidence score (0–1)  [debug/test]
-```
+![Review flow: Load → Select → Review → Score](img/review-flow.svg)
 
 ## Architecture overview
 
-```
-┌─────────────────────────────────────────────────────┐
-│                   ReviewEngine                       │
-│                                                     │
-│  ┌──────────┐   ┌──────────────┐   ┌────────────┐  │
-│  │ Backend  │   │ PromptRegistry│   │KnowledgeBase│  │
-│  │ Registry │   │ + Renderer   │   │ (optional) │  │
-│  └────┬─────┘   └──────┬───────┘   └─────┬──────┘  │
-│       │                │                  │         │
-│       ▼                ▼                  ▼         │
-│  ┌─────────┐   ┌─────────────┐   ┌────────────┐   │
-│  │Anthropic│   │  YAML/Jinja │   │   Static   │   │
-│  │ OpenAI  │   │  Templates  │   │  Markdown  │   │
-│  │ LiteLLM │   └─────────────┘   │   Files    │   │
-│  └─────────┘                     └────────────┘   │
-└─────────────────────────────────────────────────────┘
-         │
-         ▼
-   ReviewResult
-   ├── dimensions[]  (name, score, justification)
-   ├── overall_score
-   └── raw_response  (audit trail)
-```
+![ReviewEngine architecture](img/review-engine.svg)
 
 ## Components
 
-### Unified Evaluate adapter
+### Symmetric Evaluate adapter
 
-The `Evaluate` pipeline component uses two-step dispatch: **strategy first,
-then model type**.
+The `Evaluate` pipeline component uses symmetric strategy dispatch.  Both
+strategies share the **same flow** — only the confidence source differs:
 
-1. `evaluate_strategy` (from `manifest.json`) → *how* to evaluate
-   (deterministic vs agentic)
-2. `model_type` → *what* to do within that strategy
+```
+manifest → reviewer → scorer_event → [confidence source] → EvaluateResult → write → return
+```
 
-Both strategies return the same 8-key output dict for downstream ALLOCATE.
+1. `evaluate_strategy` (from `manifest.json`) → *how* to compute confidence
+   (score vs review)
+2. `model_type` → selects the `MethodReviewer` (single source of truth for
+   confidence range, prompt templates, knowledge, artifact loading)
 
-`MethodReviewer` subclasses are the single source of truth for each model
-type. Each declares `confidence_range` (used by the deterministic path) and
-bundles prompt templates + knowledge + artifact loading (used by the agentic
-path). The `ModelType` enum and `CONFIDENCE_MAP` dict have been removed —
-the registry keys (strings) are the canonical model type identifiers.
+Both strategies construct the same `EvaluateResult`, write
+`evaluate_result.json` to the job directory, and return the same 8-key
+output dict for downstream ALLOCATE. The manifest is treated as read-only.
+
+Each strategy also writes its own strategy-specific result file:
+- Score: `score_result.json` (`ScoreResult` — confidence + audit fields)
+- Review: `review_result.json` (`ReviewResult` — dimensions + justifications)
+
+`MethodReviewer` provides a default `load_artifact()` implementation (reads
+all manifest files, extracts `sample_size` from JSON).  Subclasses override
+only when they need method-specific loading.
 
 | File | Role |
 |------|------|
-| `scorer.py` | Pure function `score_initiative(event, confidence_range)` — deterministic score for debugging, testing, and illustration; seeded by `initiative_id` |
+| `models.py` | `EvaluateResult` dataclass (shared stage output) |
+| `score/scorer.py` | `ScoreResult` dataclass + `score_confidence()` — seeded by `initiative_id` |
 | `job_reader.py` | `load_scorer_event(manifest, job_dir)` — reads `impact_results.json` and builds a flat scorer event dict |
-| `adapter.py` | `Evaluate` PipelineComponent — reads manifest, dispatches on `evaluate_strategy`, returns common output |
+| `adapter.py` | `Evaluate` PipelineComponent — symmetric dispatch, shared `EvaluateResult` construction and I/O |
 
 ### Review subsystem
 
@@ -77,12 +62,12 @@ the registry keys (strings) are the canonical model type identifiers.
 | `review/models.py` | Data models: `ReviewResult`, `ReviewDimension`, `ArtifactPayload`, `PromptSpec` |
 | `review/engine.py` | `ReviewEngine` — orchestrates a single review: load prompt, render template, call backend, parse response |
 | `review/api.py` | Public `review(job_dir)` function — end-to-end review of a job directory |
-| `review/manifest.py` | `Manifest` dataclass + `load_manifest()` + `update_manifest()` |
+| `review/manifest.py` | `Manifest` dataclass + `load_manifest()` (read-only) |
 | `review/backends/base.py` | `Backend` ABC + `BackendRegistry` (decorator-based registration) |
 | `review/backends/anthropic_backend.py` | Anthropic Messages API backend |
 | `review/backends/openai_backend.py` | OpenAI Chat Completions backend |
 | `review/backends/litellm_backend.py` | LiteLLM unified backend (100+ providers) |
-| `review/methods/base.py` | `MethodReviewer` ABC + `MethodReviewerRegistry` |
+| `review/methods/base.py` | `MethodReviewer` base (default `load_artifact`) + `MethodReviewerRegistry` |
 | `review/methods/experiment/` | Experiment (RCT) reviewer with prompt templates and knowledge |
 | `config.py` | `ReviewConfig` — loads from YAML/dict/env vars |
 
@@ -115,13 +100,14 @@ The orchestrator passes a job directory reference to `Evaluate.execute()`:
 | `job_dir` | str | Path to the job directory containing `manifest.json` |
 | `cost_to_scale` | float | (optional) Override for cost from the orchestrator |
 
-The manifest's `evaluate_strategy` field (default: `"agentic"`) controls
-the evaluation approach. Both deterministic and agentic paths read scenario
-returns from `impact_results.json` via `load_scorer_event()`.
+The manifest's `evaluate_strategy` field (default: `"review"`) controls
+the confidence source.  Both strategies share the same symmetric flow:
+read manifest, select reviewer, load scorer event, compute confidence,
+construct `EvaluateResult`, write `evaluate_result.json`.
 
 The `evaluate_strategy` field in `manifest.json`:
-- `"deterministic"` — lightweight scorer for debugging and testing
-- `"agentic"` — runs the full LLM review pipeline (default)
+- `"score"` — seeded random draw from `confidence_range` (debug/test), writes `score_result.json`
+- `"review"` — LLM review via `ReviewEngine`, confidence = `overall_score`, writes `review_result.json`
 
 ### Scorer event contract
 
@@ -137,10 +123,20 @@ The `evaluate_strategy` field in `manifest.json`:
 }
 ```
 
-The agentic review path reads the same file as raw text via
+The review path reads the same file as raw text via
 `reviewer.load_artifact()`, so the full measure output (nested model params,
 diagnostics, etc.) is preserved for the LLM reviewer even though the scorer
 only uses the flat keys above.
+
+### Score output
+
+```python
+@dataclass
+class ScoreResult:
+    initiative_id: str
+    confidence: float              # deterministic draw
+    confidence_range: tuple[float, float]  # bounds used
+```
 
 ### Review input
 
@@ -150,7 +146,7 @@ The `ArtifactPayload` envelope:
 @dataclass
 class ArtifactPayload:
     initiative_id: str
-    artifact_text: str       # serialized measure results
+    artifact_text: str       # serialized upstream results
     model_type: str          # methodology label
     sample_size: int
     metadata: dict           # additional context
@@ -236,9 +232,8 @@ library. Backend SDKs and Jinja2 are optional extras in `pyproject.toml`.
 
 ## Future directions
 
-- **MeasureJobResult → ArtifactPayload bridge**: Structured formatter that
-  serializes the rich measure output (DataFrames, JSON, config) into reviewable
-  text. Format TBD.
+- **Rich artifact bridge**: Structured formatter that serializes complex
+  upstream output (DataFrames, JSON, config) into reviewable text. Format TBD.
 - **Vector knowledge base**: Wrap external vector stores (ChromaDB, Pinecone)
   for semantic retrieval of methodology references.
 - **Multi-pass review**: Chain multiple prompts (study design → data quality →

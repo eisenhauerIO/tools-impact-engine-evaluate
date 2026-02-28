@@ -5,10 +5,15 @@ self-contained deliverable. See DESIGN.md for architectural context.
 
 ## Current state
 
-The evaluate package is complete through Phase 2 (documentation):
+The evaluate package is complete through Phase 2.5 (symmetric dispatch + naming):
 
-- Unified `Evaluate` adapter with deterministic and agentic strategy dispatch
-- `MethodReviewer` registry as single source of truth for model types
+- Symmetric `Evaluate` adapter: both strategies share setup, `EvaluateResult`
+  construction, and job directory I/O. Manifest is read-only.
+- Two strategies: `"score"` (deterministic) and `"review"` (LLM-powered),
+  each with its own result type (`ScoreResult`, `ReviewResult`) and output file
+- `MethodReviewer` base with default `load_artifact()` — subclasses override
+  only when they need method-specific loading
+- `score_confidence()` pure function; `EvaluateResult` shared stage output
 - Review engine with `from_config()` and `review()`
 - Three LLM backends (Anthropic, OpenAI, LiteLLM) via registry
 - Experiment (RCT) reviewer with prompt templates and knowledge base
@@ -80,7 +85,6 @@ impact_engine_evaluate.review("job-impact-engine-XXXX/")
   ├─ 5. engine.review(payload) → ReviewResult
   │
   ├─ 6. Write review_result.json to job directory
-  │     → update manifest.json with new files entry
   │
   └─ 7. Return ReviewResult
 ```
@@ -113,16 +117,8 @@ package):
 - `files` → maps logical names to `{path, format}` entries (required)
 - `schema_version` → versioning (required)
 
-After review, the evaluate package appends its output to the same manifest:
-
-```json
-{
-  "files": {
-    "impact_results": {"path": "impact_results.json", "format": "json"},
-    "review_result": {"path": "review_result.json", "format": "json"}
-  }
-}
-```
+The evaluate stage treats the manifest as **read-only**. Output files are
+written to the job directory by convention (fixed filenames).
 
 ### MethodReviewer interface
 
@@ -188,7 +184,7 @@ External packages follow the same structure. Resource location via
 
 | File | Role |
 |------|------|
-| `review/manifest.py` | `Manifest` dataclass + `load_manifest()` + `update_manifest()` |
+| `review/manifest.py` | `Manifest` dataclass + `load_manifest()` (read-only) |
 | `review/methods/base.py` | `MethodReviewer` ABC + `MethodReviewerRegistry` |
 | `review/methods/__init__.py` | Package init, imports experiment to trigger registration |
 | `review/methods/experiment/reviewer.py` | `ExperimentReviewer` with `@register("experiment")` |
@@ -196,7 +192,7 @@ External packages follow the same structure. Resource location via
 | `review/methods/experiment/knowledge/*.md` | Domain knowledge (3 files) |
 | `review/api.py` | Top-level `review(job_dir)` function |
 | `__init__.py` | Expose `review` in public API |
-| `tests/test_manifest.py` | Manifest loading, validation, update |
+| `tests/test_manifest.py` | Manifest loading and validation |
 | `tests/test_method_registry.py` | Registry mechanics |
 | `tests/test_experiment_review.py` | Experiment reviewer, prompt, knowledge |
 | `tests/test_review_api.py` | End-to-end API test |
@@ -205,19 +201,19 @@ External packages follow the same structure. Resource location via
 
 **Status**: complete
 
-**Goal**: Merge the deterministic scorer and agentic review into a single
+**Goal**: Merge the score and review strategies into a single
 `Evaluate.execute()` that reads a job directory, selects a strategy from the
 manifest, and returns a common output contract.
 
 ### Key changes
 
-- **`Manifest.evaluate_strategy`**: new field (default `"agentic"`) that
+- **`Manifest.evaluate_strategy`**: new field (default `"review"`) that
   controls which evaluation path to use.
 - **`MethodReviewer.confidence_range`**: each reviewer declares its
-  deterministic confidence bounds. The `ModelType` enum and `CONFIDENCE_MAP`
+  score confidence bounds. The `ModelType` enum and `CONFIDENCE_MAP`
   dict are removed — the registry is the single source of truth.
-- **`score_initiative(event, confidence_range)`**: takes an explicit range
-  parameter instead of looking up `model_type` in `CONFIDENCE_MAP`.
+- **`score_confidence(initiative_id, confidence_range)`**: takes an explicit
+  range parameter instead of looking up `model_type` in `CONFIDENCE_MAP`.
 - **`load_scorer_event(manifest, job_dir)`**: shared reader that builds a
   flat scorer event dict from `impact_results.json`.
 - **`Evaluate` adapter**: reads manifest, dispatches on `evaluate_strategy`,
@@ -225,9 +221,9 @@ manifest, and returns a common output contract.
 
 ### Confidence semantic
 
-- **Deterministic path**: confidence is drawn from the reviewer's
-  `confidence_range`, seeded by `initiative_id` (reproducible).
-- **Agentic path**: confidence is the LLM-derived `overall_score` from
+- **Score path**: confidence is drawn from the reviewer's
+  `confidence_range`, seeded by `initiative_id` (reproducible). Returns `ScoreResult`.
+- **Review path**: confidence is the LLM-derived `overall_score` from
   `ReviewResult` (non-deterministic, content-aware).
 
 ## Phase 2 — Documentation and tutorials

@@ -3,8 +3,8 @@
 ## Overview
 
 Impact Engine Evaluate scores causal effect estimates for reliability. It reads
-a job directory produced by the measure stage and assigns a confidence score
-that penalizes downstream return estimates in the allocator.
+a job directory conforming to the manifest convention and assigns a confidence
+score that penalizes downstream return estimates in the allocator.
 
 The package provides two evaluation strategies. **Agentic review** sends the
 measurement artifacts to an LLM for structured, per-dimension evaluation.
@@ -87,8 +87,7 @@ result = review("path/to/job-impact-engine-XXXX/")
    (YAML with Jinja2) and domain knowledge files (Markdown).
 5. **Run review.** The `ReviewEngine` renders the prompt, calls the backend, and
    parses the response into per-dimension scores.
-6. **Write results.** Saves `review_result.json` to the job directory and updates
-   `manifest.json`.
+6. **Write results.** Saves `review_result.json` to the job directory.
 
 The returned `ReviewResult` contains per-dimension scores, an overall score (the
 mean), and the raw LLM response for audit. See [Configuration](configuration.md)
@@ -134,7 +133,7 @@ The orchestrator pipeline flows through four stages:
 MEASURE ──► EVALUATE ──► ALLOCATE ──► SCALE
 ```
 
-The measure stage writes a job directory with `manifest.json` and
+The upstream stage writes a job directory with `manifest.json` and
 `impact_results.json`. The evaluate stage reads that directory, scores it, and
 passes the result to the allocator. Low confidence pulls returns toward
 worst-case scenarios, making the allocator conservative where evidence is weak

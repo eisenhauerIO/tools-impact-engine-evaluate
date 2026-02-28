@@ -1,4 +1,4 @@
-"""Data models for agentic artifact review."""
+"""Data models for artifact review."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ class ReviewDimension:
 
 @dataclass
 class ReviewResult:
-    """Complete result of an agentic artifact review.
+    """Complete result of an artifact review.
 
     Parameters
     ----------

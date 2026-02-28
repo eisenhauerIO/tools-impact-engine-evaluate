@@ -8,7 +8,7 @@ from dataclasses import asdict
 from pathlib import Path
 
 from impact_engine_evaluate.review.engine import ReviewEngine, load_knowledge, load_prompt_spec
-from impact_engine_evaluate.review.manifest import FileEntry, load_manifest, update_manifest
+from impact_engine_evaluate.review.manifest import load_manifest
 from impact_engine_evaluate.review.methods import MethodReviewerRegistry
 from impact_engine_evaluate.review.models import ReviewResult
 
@@ -72,8 +72,5 @@ def review(job_dir: str | Path, *, config: dict | str | None = None) -> ReviewRe
     result_path = job_dir / REVIEW_RESULT_FILENAME
     result_path.write_text(json.dumps(asdict(result), indent=2) + "\n", encoding="utf-8")
     logger.info("Wrote review result to %s", result_path)
-
-    # 7. Update manifest
-    update_manifest(job_dir, "review_result", FileEntry(path=REVIEW_RESULT_FILENAME, format="json"))
 
     return result

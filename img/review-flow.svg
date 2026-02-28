@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" style="background: transparent; background-color: transparent; color-scheme: light dark;" version="1.1" width="602px" height="87px" viewBox="-0.5 -0.5 602 87">
+  <defs/>
+  <g>
+    <!-- Stage 1: Load -->
+    <g>
+      <rect x="0" y="0" width="120" height="50" rx="7.5" ry="7.5" fill="#dae8fc" stroke="#6c8ebf" pointer-events="all" style="fill: light-dark(rgb(218, 232, 252), rgb(29, 41, 59)); stroke: light-dark(rgb(108, 142, 191), rgb(92, 121, 163));"/>
+      <text x="60" y="30" fill="#000000" font-family="Helvetica" font-weight="bold" text-anchor="middle" font-size="12px" style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">Load</text>
+    </g>
+    <g>
+      <text x="60" y="71" fill="#000000" font-family="Helvetica" text-anchor="middle" font-size="10px" style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">Read manifest</text>
+      <text x="60" y="83" fill="#000000" font-family="Helvetica" text-anchor="middle" font-size="10px" style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">+ artifacts</text>
+    </g>
+
+    <!-- Arrow 1 -->
+    <g>
+      <path d="M 120 25 L 151.76 25" fill="none" stroke="#666666" stroke-width="2" stroke-miterlimit="10" style="stroke: light-dark(rgb(102, 102, 102), rgb(149, 149, 149));"/>
+      <path d="M 157.76 25 L 149.76 29 L 151.76 25 L 149.76 21 Z" fill="#666666" stroke="#666666" stroke-width="2" stroke-miterlimit="10" style="fill: light-dark(rgb(102, 102, 102), rgb(149, 149, 149)); stroke: light-dark(rgb(102, 102, 102), rgb(149, 149, 149));"/>
+    </g>
+
+    <!-- Stage 2: Select -->
+    <g>
+      <rect x="160" y="0" width="120" height="50" rx="7.5" ry="7.5" fill="#d5e8d4" stroke="#82b366" pointer-events="all" style="fill: light-dark(rgb(213, 232, 212), rgb(31, 47, 30)); stroke: light-dark(rgb(130, 179, 102), rgb(68, 110, 44));"/>
+      <text x="220" y="30" fill="#000000" font-family="Helvetica" font-weight="bold" text-anchor="middle" font-size="12px" style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">Select</text>
+    </g>
+    <g>
+      <text x="220" y="71" fill="#000000" font-family="Helvetica" text-anchor="middle" font-size="10px" style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">MethodReviewer</text>
+      <text x="220" y="83" fill="#000000" font-family="Helvetica" text-anchor="middle" font-size="10px" style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">prompt + knowledge</text>
+    </g>
+
+    <!-- Arrow 2 -->
+    <g>
+      <path d="M 280 25 L 311.76 25" fill="none" stroke="#666666" stroke-width="2" stroke-miterlimit="10" style="stroke: light-dark(rgb(102, 102, 102), rgb(149, 149, 149));"/>
+      <path d="M 317.76 25 L 309.76 29 L 311.76 25 L 309.76 21 Z" fill="#666666" stroke="#666666" stroke-width="2" stroke-miterlimit="10" style="fill: light-dark(rgb(102, 102, 102), rgb(149, 149, 149)); stroke: light-dark(rgb(102, 102, 102), rgb(149, 149, 149));"/>
+    </g>
+
+    <!-- Stage 3: Review -->
+    <g>
+      <rect x="320" y="0" width="120" height="50" rx="7.5" ry="7.5" fill="#fff2cc" stroke="#d6b656" pointer-events="all" style="fill: light-dark(rgb(255, 242, 204), rgb(40, 29, 0)); stroke: light-dark(rgb(214, 182, 86), rgb(109, 81, 0));"/>
+      <text x="380" y="30" fill="#000000" font-family="Helvetica" font-weight="bold" text-anchor="middle" font-size="12px" style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">Review</text>
+    </g>
+    <g>
+      <text x="380" y="71" fill="#000000" font-family="Helvetica" text-anchor="middle" font-size="10px" style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">LLM backend call</text>
+      <text x="380" y="83" fill="#000000" font-family="Helvetica" text-anchor="middle" font-size="10px" style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">response parsing</text>
+    </g>
+
+    <!-- Arrow 3 -->
+    <g>
+      <path d="M 440 25 L 471.76 25" fill="none" stroke="#666666" stroke-width="2" stroke-miterlimit="10" style="stroke: light-dark(rgb(102, 102, 102), rgb(149, 149, 149));"/>
+      <path d="M 477.76 25 L 469.76 29 L 471.76 25 L 469.76 21 Z" fill="#666666" stroke="#666666" stroke-width="2" stroke-miterlimit="10" style="fill: light-dark(rgb(102, 102, 102), rgb(149, 149, 149)); stroke: light-dark(rgb(102, 102, 102), rgb(149, 149, 149));"/>
+    </g>
+
+    <!-- Stage 4: Score -->
+    <g>
+      <rect x="480" y="0" width="120" height="50" rx="7.5" ry="7.5" fill="#e1d5e7" stroke="#9673a6" pointer-events="all" style="fill: light-dark(rgb(225, 213, 231), rgb(57, 47, 63)); stroke: light-dark(rgb(150, 115, 166), rgb(149, 119, 163));"/>
+      <text x="540" y="30" fill="#000000" font-family="Helvetica" font-weight="bold" text-anchor="middle" font-size="12px" style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">Score</text>
+    </g>
+    <g>
+      <text x="540" y="71" fill="#000000" font-family="Helvetica" text-anchor="middle" font-size="10px" style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">ReviewResult</text>
+      <text x="540" y="83" fill="#000000" font-family="Helvetica" text-anchor="middle" font-size="10px" style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">per-dimension scores</text>
+    </g>
+  </g>
+</svg>

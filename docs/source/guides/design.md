@@ -2,20 +2,20 @@
 
 ## Motivation
 
-The impact engine pipeline produces causal effect estimates through the measure
-stage. These results require expert judgement to interpret. Is the effect
-estimate plausible? Is the model type appropriate for the data? Are the
-diagnostics healthy?
+Upstream pipeline stages produce structured artifacts — point estimates,
+confidence intervals, model diagnostics — that require expert judgement to
+interpret. Is the effect estimate plausible? Is the model type appropriate for
+the data? Are the diagnostics healthy?
 
-The agentic review layer adds LLM-powered evaluation of the actual measurement
-artifacts, producing structured, auditable review judgements. A lightweight
-deterministic scorer is included for debugging, testing, and illustration — it
-assigns a confidence band based on methodology type alone without examining the
-content of the results.
+The evaluate package provides a general-purpose agentic review layer that
+accepts any job directory conforming to the manifest convention, producing
+structured, auditable review judgements. A lightweight deterministic scorer is
+included for debugging, testing, and illustration — it assigns a confidence band
+based on methodology type alone without examining the content of the results.
 
 ```
-MeasureResult ──► Agentic Reviewer      ──► per-dimension scores + justifications
-             └──► Deterministic Scorer  ──► confidence score (0–1)  [debug/test]
+Artifacts ──► Review strategy   ──► per-dimension scores + justifications
+          └──► Score strategy   ──► confidence score (0–1)  [debug/test]
 ```
 
 ---
@@ -50,27 +50,38 @@ MeasureResult ──► Agentic Reviewer      ──► per-dimension scores + j
 
 ## Components
 
-### Unified Evaluate adapter
+### Symmetric Evaluate adapter
 
-The `Evaluate` pipeline component uses two-step dispatch: **strategy first,
-then model type**.
+The `Evaluate` pipeline component uses symmetric strategy dispatch.  Both
+strategies share the **same flow** — only the confidence source differs:
 
-1. `evaluate_strategy` (from `manifest.json`) controls *how* to evaluate
-   (deterministic vs agentic).
-2. `model_type` controls *what* to do within that strategy.
+```
+manifest → reviewer → scorer_event → [confidence source] → EvaluateResult → write → return
+```
 
-Both strategies return the same 8-key output dict for downstream allocation.
+1. `evaluate_strategy` (from `manifest.json`) controls *how* to compute
+   confidence (score vs review).
+2. `model_type` selects the `MethodReviewer` (single source of truth for
+   confidence range, prompt templates, knowledge, artifact loading).
 
-`MethodReviewer` subclasses are the single source of truth for each model type.
-Each declares `confidence_range` (used by the deterministic path) and bundles
-prompt templates, knowledge files, and artifact loading logic (used by the
-agentic path).
+Both strategies construct the same `EvaluateResult`, write
+`evaluate_result.json` to the job directory, and return the same 8-key
+output dict for downstream allocation. The manifest is treated as read-only.
+
+Each strategy also writes its own strategy-specific result file:
+- Score: `score_result.json` (`ScoreResult` — confidence + audit fields)
+- Review: `review_result.json` (`ReviewResult` — dimensions + justifications)
+
+`MethodReviewer` provides a default `load_artifact()` implementation (reads
+all manifest files, extracts `sample_size` from JSON).  Subclasses override
+only when they need method-specific loading.
 
 | File | Role |
 |------|------|
-| `scorer.py` | Pure function `score_initiative()` — deterministic score for debugging, testing, and illustration |
+| `models.py` | `EvaluateResult` dataclass (shared stage output) |
+| `score/scorer.py` | `ScoreResult` dataclass + `score_confidence()` — seeded by `initiative_id` |
 | `job_reader.py` | `load_scorer_event()` — reads `impact_results.json` and builds a flat scorer event dict |
-| `adapter.py` | `Evaluate` PipelineComponent — reads manifest, dispatches on strategy, returns common output |
+| `adapter.py` | `Evaluate` PipelineComponent — symmetric dispatch, shared `EvaluateResult` construction and I/O |
 
 ### Review subsystem
 
@@ -79,12 +90,12 @@ agentic path).
 | `review/models.py` | Data models: `ReviewResult`, `ReviewDimension`, `ArtifactPayload`, `PromptSpec` |
 | `review/engine.py` | `ReviewEngine` — orchestrates a single review: load prompt, render, call backend, parse |
 | `review/api.py` | Public `review()` function — end-to-end review of a job directory |
-| `review/manifest.py` | `Manifest` dataclass + `load_manifest()` + `update_manifest()` |
+| `review/manifest.py` | `Manifest` dataclass + `load_manifest()` (read-only) |
 | `review/backends/base.py` | `Backend` ABC + `BackendRegistry` |
 | `review/backends/anthropic_backend.py` | Anthropic Messages API backend |
 | `review/backends/openai_backend.py` | OpenAI Chat Completions backend |
 | `review/backends/litellm_backend.py` | LiteLLM unified backend (100+ providers) |
-| `review/methods/base.py` | `MethodReviewer` ABC + `MethodReviewerRegistry` |
+| `review/methods/base.py` | `MethodReviewer` base (default `load_artifact`) + `MethodReviewerRegistry` |
 | `review/methods/experiment/` | Experiment (RCT) reviewer with prompt templates and knowledge |
 | `config.py` | `ReviewConfig` — loads from YAML, dict, or env vars |
 
@@ -143,6 +154,16 @@ The orchestrator passes a job directory reference to `Evaluate.execute()`:
 }
 ```
 
+### Score output
+
+```python
+@dataclass
+class ScoreResult:
+    initiative_id: str
+    confidence: float              # deterministic draw
+    confidence_range: tuple[float, float]  # bounds used
+```
+
 ### Review input
 
 The `ArtifactPayload` envelope:
@@ -151,7 +172,7 @@ The `ArtifactPayload` envelope:
 @dataclass
 class ArtifactPayload:
     initiative_id: str
-    artifact_text: str       # serialized measure results
+    artifact_text: str       # serialized upstream results
     model_type: str          # methodology label
     sample_size: int
     metadata: dict           # additional context
@@ -215,14 +236,14 @@ JSON fallback parsing is also supported.
 
 ## Manifest convention
 
-The `manifest.json` format is a shared convention between the measure and
-evaluate stages:
+The `manifest.json` format is a shared convention (not owned by any single
+package):
 
 ```json
 {
   "schema_version": "2.0",
   "model_type": "experiment",
-  "evaluate_strategy": "agentic",
+  "evaluate_strategy": "review",
   "created_at": "2025-06-01T12:00:00+00:00",
   "files": {
     "impact_results": {"path": "impact_results.json", "format": "json"}
@@ -230,15 +251,17 @@ evaluate stages:
 }
 ```
 
-After review, the evaluate stage appends its output:
+The evaluate stage treats the manifest as **read-only**. Output files are
+written to the job directory by convention (fixed filenames), not registered
+in the manifest:
 
-```json
-{
-  "files": {
-    "impact_results": {"path": "impact_results.json", "format": "json"},
-    "review_result": {"path": "review_result.json", "format": "json"}
-  }
-}
+```
+job-impact-engine-XXXX/
+├── manifest.json          # read-only (created by the producer)
+├── impact_results.json    # upstream output
+├── evaluate_result.json   # written by evaluate (both strategies)
+├── score_result.json      # written by evaluate (score strategy only)
+└── review_result.json     # written by evaluate (review strategy only)
 ```
 
 ---

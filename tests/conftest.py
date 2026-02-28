@@ -20,12 +20,12 @@ def sample_scorer_event():
 
 
 @pytest.fixture()
-def deterministic_job_dir(tmp_path):
-    """Job directory configured for deterministic evaluation."""
+def score_job_dir(tmp_path):
+    """Job directory configured for score evaluation."""
     manifest = {
         "schema_version": "2.0",
         "model_type": "experiment",
-        "evaluate_strategy": "deterministic",
+        "evaluate_strategy": "score",
         "created_at": "2025-06-01T12:00:00+00:00",
         "files": {
             "impact_results": {"path": "impact_results.json", "format": "json"},
@@ -44,14 +44,14 @@ def deterministic_job_dir(tmp_path):
 
 
 @pytest.fixture()
-def agentic_job_dir(tmp_path):
-    """Job directory configured for agentic evaluation."""
-    job_dir = tmp_path / "agentic"
+def review_job_dir(tmp_path):
+    """Job directory configured for review evaluation."""
+    job_dir = tmp_path / "review"
     job_dir.mkdir()
     manifest = {
         "schema_version": "2.0",
         "model_type": "experiment",
-        "evaluate_strategy": "agentic",
+        "evaluate_strategy": "review",
         "created_at": "2025-06-01T12:00:00+00:00",
         "files": {
             "impact_results": {"path": "impact_results.json", "format": "json"},
