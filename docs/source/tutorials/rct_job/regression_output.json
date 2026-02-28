@@ -1,0 +1,71 @@
+{
+  "model_class": "OLS",
+  "outcome_variable": "reading_score_post",
+  "estimator": "intent-to-treat",
+  "observations": 342,
+  "coefficients": {
+    "treatment_assigned": {
+      "estimate": 0.18,
+      "std_error": 0.066,
+      "t_stat": 2.73,
+      "p_value": 0.007,
+      "ci_lower": 0.05,
+      "ci_upper": 0.31
+    },
+    "reading_score_pre": {
+      "estimate": 0.72,
+      "std_error": 0.040,
+      "t_stat": 18.00,
+      "p_value": 0.000,
+      "ci_lower": 0.64,
+      "ci_upper": 0.80
+    },
+    "age_years": {
+      "estimate": 0.02,
+      "std_error": 0.010,
+      "t_stat": 2.00,
+      "p_value": 0.046,
+      "ci_lower": 0.00,
+      "ci_upper": 0.04
+    },
+    "female": {
+      "estimate": 0.03,
+      "std_error": 0.022,
+      "t_stat": 1.36,
+      "p_value": 0.174,
+      "ci_lower": -0.01,
+      "ci_upper": 0.07
+    },
+    "school_id_fe": {
+      "note": "School fixed effects included (n=18 schools); coefficients omitted for brevity."
+    }
+  },
+  "model_fit": {
+    "r_squared": 0.23,
+    "adjusted_r_squared": 0.22,
+    "f_statistic": 48.3,
+    "f_p_value": 0.000,
+    "residual_std_error": 0.89,
+    "aic": 924.1,
+    "bic": 956.3
+  },
+  "standard_errors": "HC2 heteroskedasticity-robust",
+  "balance_check": {
+    "test": "F-test of joint significance of baseline covariates on treatment assignment",
+    "f_stat": 1.12,
+    "p_value": 0.34,
+    "interpretation": "No evidence of imbalance at baseline."
+  },
+  "attrition": {
+    "initial_n": 360,
+    "final_n": 342,
+    "attrition_rate": 0.05,
+    "differential_attrition_test_p": 0.61,
+    "notes": "18 students (5%) lost to follow-up; attrition balanced across arms."
+  },
+  "compliance": {
+    "treatment_received_treatment": 0.91,
+    "control_received_treatment": 0.02,
+    "notes": "Two-sided non-compliance; ITT analysis used as pre-specified."
+  }
+}

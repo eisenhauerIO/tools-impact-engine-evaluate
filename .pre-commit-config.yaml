@@ -3,6 +3,7 @@ repos:
     rev: 0.8.1
     hooks:
       - id: nbstripout
+        exclude: "docs/source/tutorials/(demo_agentic_review|demo_ollama_review)\\.ipynb"
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0

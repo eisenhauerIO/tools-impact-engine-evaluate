@@ -19,4 +19,5 @@ guides/api_reference
 
 tutorials/demo_deterministic_scoring
 tutorials/demo_agentic_review
+tutorials/demo_ollama_review
 ```

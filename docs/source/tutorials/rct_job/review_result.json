@@ -1,0 +1,37 @@
+{
+  "initiative_id": "literacy-rct-2024",
+  "prompt_name": "experiment_review",
+  "prompt_version": "1.0",
+  "backend_name": "litellm",
+  "model": "ollama_chat/llama3.2",
+  "dimensions": [
+    {
+      "name": "randomization_integrity",
+      "score": 0.8,
+      "justification": "The study reports a balanced attrition rate (5%) and differential attrition test p-value of 0.61, indicating that the treatment effect estimate is likely unbiased under worst-case attrition scenarios."
+    },
+    {
+      "name": "specification_adequacy",
+      "score": 0.9,
+      "justification": "The study uses a well-specified OLS model with robust standard errors (HC2 heteroskedasticity-robust) and reports the F-statistic for covariate balance, indicating that the model is adequately specified."
+    },
+    {
+      "name": "statistical_inference",
+      "score": 0.7,
+      "justification": "The study reports a p-value of 0.007 for the treatment coefficient, which is statistically significant. However, the confidence intervals (CI) are not reported in a way that allows for easy interpretation of their coverage probability."
+    },
+    {
+      "name": "threats_to_validity",
+      "score": 0.6,
+      "justification": "The study does not report any evidence of spillover effects or Hawthorne effects, but it is unclear whether the sample size is sufficient to detect such effects. The differential attrition test p-value of 0.61 suggests that attrition may be balanced across arms, but this result should be interpreted with caution."
+    },
+    {
+      "name": "effect_size_plausibility",
+      "score": 0.8,
+      "justification": "The estimated treatment effect (ATE) is 0.18 standardised score points, which is a plausible effect size given the context of an early literacy intervention in primary schools."
+    }
+  ],
+  "overall_score": 0.75,
+  "raw_response": "{\"dimensions\":[{\"name\":\"randomization_integrity\",\"score\":0.8,\"justification\":\"The study reports a balanced attrition rate (5%) and differential attrition test p-value of 0.61, indicating that the treatment effect estimate is likely unbiased under worst-case attrition scenarios.\"},{\"name\":\"specification_adequacy\",\"score\":0.9,\"justification\":\"The study uses a well-specified OLS model with robust standard errors (HC2 heteroskedasticity-robust) and reports the F-statistic for covariate balance, indicating that the model is adequately specified.\"},{\"name\":\"statistical_inference\",\"score\":0.7,\"justification\":\"The study reports a p-value of 0.007 for the treatment coefficient, which is statistically significant. However, the confidence intervals (CI) are not reported in a way that allows for easy interpretation of their coverage probability.\"},{\"name\":\"threats_to_validity\",\"score\":0.6,\"justification\":\"The study does not report any evidence of spillover effects or Hawthorne effects, but it is unclear whether the sample size is sufficient to detect such effects. The differential attrition test p-value of 0.61 suggests that attrition may be balanced across arms, but this result should be interpreted with caution.\"},{\"name\":\"effect_size_plausibility\",\"score\":0.8,\"justification\":\"The estimated treatment effect (ATE) is 0.18 standardised score points, which is a plausible effect size given the context of an early literacy intervention in primary schools.\"}],\"overall\":0.75}",
+  "timestamp": "2026-02-28T20:44:30.894861+00:00"
+}

@@ -152,13 +152,20 @@ class ResultsBuilder:
         model : str
             Model identifier that produced the response.
         response : Any
-            Raw LiteLLM completion response with ``choices[0].message.parsed``.
+            Raw LiteLLM completion response.  Either ``choices[0].message.parsed``
+            (OpenAI-style structured output) or ``choices[0].message.content``
+            (JSON string, as returned by ollama and other backends) is accepted.
 
         Returns
         -------
         ReviewResult
         """
-        parsed: ReviewResponse = response.choices[0].message.parsed
+        message = response.choices[0].message
+        parsed: ReviewResponse = getattr(message, "parsed", None)
+        if parsed is None:
+            # Backends such as ollama return JSON in .content rather than
+            # populating .parsed (litellm structured-output path).
+            parsed = ReviewResponse.model_validate_json(message.content or "{}")
         dimensions = [
             ReviewDimension(name=d.name, score=d.score, justification=d.justification) for d in parsed.dimensions
         ]

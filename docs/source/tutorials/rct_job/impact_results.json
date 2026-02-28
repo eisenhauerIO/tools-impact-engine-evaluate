@@ -1,0 +1,22 @@
+{
+  "initiative_id": "literacy-rct-2024",
+  "initiative_name": "Early Literacy Intervention — Primary Schools",
+  "model_type": "experiment",
+  "effect_estimate": 0.18,
+  "ci_upper": 0.31,
+  "ci_lower": 0.05,
+  "p_value": 0.012,
+  "std_error": 0.066,
+  "cost_to_scale": 85.0,
+  "sample_size": 342,
+  "treatment_n": 171,
+  "control_n": 171,
+  "outcome": "reading_score_post",
+  "outcome_description": "Standardised reading assessment score (0–100)",
+  "effect_unit": "standardised score points",
+  "follow_up_weeks": 24,
+  "randomisation_level": "individual",
+  "num_clusters": null,
+  "pre_registration": "OSF-XXXXXXX",
+  "notes": "Effect estimate from intent-to-treat analysis. Randomisation stratified by school and pre-test quintile."
+}
