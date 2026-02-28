@@ -1,1 +1,1 @@
-../.cache/utils-agentic-support/claude/subagents/ecosystem-reviewer.md
+../.cache/utils-agentic-support/claude/ecosystems/impact-engine/subagents/ecosystem-reviewer.md
