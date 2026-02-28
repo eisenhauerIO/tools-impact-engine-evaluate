@@ -34,41 +34,6 @@ class BackendConfig:
 
 
 @dataclass
-class PromptConfig:
-    """Prompt registry configuration.
-
-    Parameters
-    ----------
-    name : str
-        Default prompt template name.
-    template_dirs : list[str]
-        Extra directories to scan for prompt templates.
-    """
-
-    name: str = "study_design_review"
-    template_dirs: list[str] = field(default_factory=list)
-
-
-@dataclass
-class KnowledgeConfig:
-    """Knowledge base configuration.
-
-    Parameters
-    ----------
-    type : str
-        Knowledge base type (``"static"`` or ``"vector"``).
-    path : str
-        Path to knowledge base content directory.
-    top_k : int
-        Number of chunks to retrieve.
-    """
-
-    type: str = "static"
-    path: str = ""
-    top_k: int = 5
-
-
-@dataclass
 class ReviewConfig:
     """Top-level configuration for the review subsystem.
 
@@ -76,15 +41,9 @@ class ReviewConfig:
     ----------
     backend : BackendConfig
         LLM backend settings.
-    prompt : PromptConfig
-        Prompt template settings.
-    knowledge : KnowledgeConfig | None
-        Knowledge base settings. ``None`` disables retrieval.
     """
 
     backend: BackendConfig = field(default_factory=BackendConfig)
-    prompt: PromptConfig = field(default_factory=PromptConfig)
-    knowledge: KnowledgeConfig | None = None
 
 
 def load_config(source: str | Path | dict[str, Any] | None = None) -> ReviewConfig:
@@ -109,10 +68,7 @@ def load_config(source: str | Path | dict[str, Any] | None = None) -> ReviewConf
         if path.is_file():
             raw = _load_yaml(path)
 
-    # Build sub-configs
     backend_raw = raw.get("backend", {})
-    prompt_raw = raw.get("prompt", {})
-    knowledge_raw = raw.get("knowledge", None)
 
     backend = BackendConfig(
         type=os.environ.get("REVIEW_BACKEND_TYPE", backend_raw.get("type", "anthropic")),
@@ -122,20 +78,7 @@ def load_config(source: str | Path | dict[str, Any] | None = None) -> ReviewConf
         extra={k: v for k, v in backend_raw.items() if k not in {"type", "model", "temperature", "max_tokens"}},
     )
 
-    prompt = PromptConfig(
-        name=os.environ.get("REVIEW_PROMPT_NAME", prompt_raw.get("name", "study_design_review")),
-        template_dirs=prompt_raw.get("template_dirs", []),
-    )
-
-    knowledge: KnowledgeConfig | None = None
-    if knowledge_raw:
-        knowledge = KnowledgeConfig(
-            type=os.environ.get("REVIEW_KNOWLEDGE_TYPE", knowledge_raw.get("type", "static")),
-            path=os.environ.get("REVIEW_KNOWLEDGE_PATH", knowledge_raw.get("path", "")),
-            top_k=int(os.environ.get("REVIEW_KNOWLEDGE_TOP_K", knowledge_raw.get("top_k", 5))),
-        )
-
-    return ReviewConfig(backend=backend, prompt=prompt, knowledge=knowledge)
+    return ReviewConfig(backend=backend)
 
 
 def _load_yaml(path: Path) -> dict[str, Any]:
