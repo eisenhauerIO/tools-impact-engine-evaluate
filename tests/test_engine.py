@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+from impact_engine_evaluate.review import engine as _engine_mod
 from impact_engine_evaluate.review.engine import ReviewEngine, render
 from impact_engine_evaluate.review.models import (
     ArtifactPayload,
@@ -69,7 +70,7 @@ def test_render_system_only():
 # -- Engine integration tests ------------------------------------------------
 
 
-@patch("impact_engine_evaluate.review.engine.litellm")
+@patch.object(_engine_mod, "litellm")
 def test_engine_review(mock_litellm):
     mock_litellm.completion.return_value.choices = [
         MagicMock(message=MagicMock(parsed=SAMPLE_PARSED, content=SAMPLE_PARSED.model_dump_json()))
@@ -92,7 +93,7 @@ def test_engine_review(mock_litellm):
     assert result.timestamp
 
 
-@patch("impact_engine_evaluate.review.engine.litellm")
+@patch.object(_engine_mod, "litellm")
 def test_engine_review_with_knowledge(mock_litellm):
     mock_litellm.completion.return_value.choices = [
         MagicMock(message=MagicMock(parsed=SAMPLE_PARSED, content=SAMPLE_PARSED.model_dump_json()))

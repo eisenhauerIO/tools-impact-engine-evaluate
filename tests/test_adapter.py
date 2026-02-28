@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from impact_engine_evaluate.review import engine as _engine_mod
 from impact_engine_evaluate.adapter import (
     EVALUATE_RESULT_FILENAME,
     SCORE_RESULT_FILENAME,
@@ -111,7 +112,7 @@ def _mock_litellm_completion():
     )
 
 
-@patch("impact_engine_evaluate.review.engine.litellm")
+@patch.object(_engine_mod, "litellm")
 def test_review_returns_correct_keys(mock_litellm, review_job_dir):
     """Review strategy returns all expected output keys."""
     mock_litellm.completion.return_value = _mock_litellm_completion()
@@ -121,7 +122,7 @@ def test_review_returns_correct_keys(mock_litellm, review_job_dir):
     assert set(result.keys()) == EXPECTED_KEYS
 
 
-@patch("impact_engine_evaluate.review.engine.litellm")
+@patch.object(_engine_mod, "litellm")
 def test_review_uses_llm_confidence(mock_litellm, review_job_dir):
     """Review strategy uses the LLM overall_score as confidence."""
     mock_litellm.completion.return_value = _mock_litellm_completion()
@@ -131,7 +132,7 @@ def test_review_uses_llm_confidence(mock_litellm, review_job_dir):
     assert result["confidence"] == 0.80
 
 
-@patch("impact_engine_evaluate.review.engine.litellm")
+@patch.object(_engine_mod, "litellm")
 def test_review_strategy_and_report(mock_litellm, review_job_dir):
     """Review strategy populates strategy, confidence_range, and a full report."""
     mock_litellm.completion.return_value = _mock_litellm_completion()
@@ -147,7 +148,7 @@ def test_review_strategy_and_report(mock_litellm, review_job_dir):
     assert "raw_response" in report
 
 
-@patch("impact_engine_evaluate.review.engine.litellm")
+@patch.object(_engine_mod, "litellm")
 def test_review_writes_evaluate_result(mock_litellm, review_job_dir):
     """Review strategy writes evaluate_result.json without touching manifest."""
     mock_litellm.completion.return_value = _mock_litellm_completion()

@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from impact_engine_evaluate.review import engine as _engine_mod
 from impact_engine_evaluate.review.api import review
 from impact_engine_evaluate.review.models import DimensionResponse, ReviewResponse
 
@@ -51,7 +52,7 @@ def _mock_litellm_completion():
     )
 
 
-@patch("impact_engine_evaluate.review.engine.litellm")
+@patch.object(_engine_mod, "litellm")
 def test_review_end_to_end(mock_litellm):
     mock_litellm.completion.return_value = _mock_litellm_completion()
 
@@ -75,7 +76,7 @@ def test_review_end_to_end(mock_litellm):
     assert "review_result" not in manifest_data.get("files", {})
 
 
-@patch("impact_engine_evaluate.review.engine.litellm")
+@patch.object(_engine_mod, "litellm")
 def test_review_returns_review_result(mock_litellm):
     mock_litellm.completion.return_value = _mock_litellm_completion()
 
