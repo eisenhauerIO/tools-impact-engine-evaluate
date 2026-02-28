@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 import pytest
 
+from impact_engine_evaluate.review import engine as _engine_mod
 from impact_engine_evaluate.review.api import review
 
 SAMPLE_RESPONSE = """\
@@ -57,7 +58,7 @@ def _make_job_dir():
     return tmpdir
 
 
-@patch("impact_engine_evaluate.review.engine.BackendRegistry")
+@patch.object(_engine_mod, "BackendRegistry")
 def test_review_end_to_end(mock_registry_cls):
     mock_backend = mock_registry_cls.create.return_value
     mock_backend.name = "mock"
@@ -83,7 +84,7 @@ def test_review_end_to_end(mock_registry_cls):
     assert "review_result" in manifest_data["files"]
 
 
-@patch("impact_engine_evaluate.review.engine.BackendRegistry")
+@patch.object(_engine_mod, "BackendRegistry")
 def test_review_returns_review_result(mock_registry_cls):
     mock_backend = mock_registry_cls.create.return_value
     mock_backend.name = "mock"
