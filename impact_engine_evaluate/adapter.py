@@ -10,8 +10,9 @@ from typing import Any, Protocol
 
 from impact_engine_evaluate.job_reader import load_scorer_event
 from impact_engine_evaluate.models import EvaluateResult
-from impact_engine_evaluate.review.manifest import load_manifest
+from impact_engine_evaluate.review.manifest import Manifest, load_manifest
 from impact_engine_evaluate.review.methods import MethodReviewerRegistry
+from impact_engine_evaluate.review.methods.base import MethodReviewer
 from impact_engine_evaluate.score import ScoreResult, score_confidence
 
 logger = logging.getLogger(__name__)
@@ -26,6 +27,46 @@ class PipelineComponent(Protocol):
     def execute(self, event: dict) -> dict:
         """Process event and return result."""
         ...
+
+
+class EvaluationRouter:
+    """Map a manifest to its evaluation strategy and method reviewer.
+
+    Encapsulates the two dispatch axes: strategy (``"score"`` vs
+    ``"review"``) and method (``"experiment"``, ``"diff_in_diff"``,
+    ``"synth_control"``, ...).  Raises early on unknown inputs so
+    downstream code never receives an invalid combination.
+    """
+
+    _KNOWN_STRATEGIES: frozenset[str] = frozenset({"score", "review"})
+
+    def route(self, manifest: Manifest) -> tuple[str, MethodReviewer]:
+        """Dispatch on strategy and model type.
+
+        Parameters
+        ----------
+        manifest : Manifest
+            Parsed job manifest.
+
+        Returns
+        -------
+        tuple[str, MethodReviewer]
+            ``(strategy, reviewer)`` where strategy is ``"score"`` or
+            ``"review"``.
+
+        Raises
+        ------
+        ValueError
+            If ``evaluate_strategy`` is not a known strategy.
+        KeyError
+            If ``model_type`` has no registered method reviewer.
+        """
+        strategy = manifest.evaluate_strategy
+        if strategy not in self._KNOWN_STRATEGIES:
+            msg = f"Unknown evaluate_strategy: {strategy!r}"
+            raise ValueError(msg)
+        reviewer = MethodReviewerRegistry.create(manifest.model_type)
+        return strategy, reviewer
 
 
 class Evaluate(PipelineComponent):
@@ -68,9 +109,9 @@ class Evaluate(PipelineComponent):
         """
         job_dir = Path(event["job_dir"])
         manifest = load_manifest(job_dir)
-        strategy = manifest.evaluate_strategy
 
-        reviewer = MethodReviewerRegistry.create(manifest.model_type)
+        router = EvaluationRouter()
+        strategy, reviewer = router.route(manifest)
 
         # Build overrides from the orchestrator event
         overrides: dict[str, Any] = {}
@@ -87,7 +128,7 @@ class Evaluate(PipelineComponent):
             _write_score_result(job_dir, score_result)
             confidence = score_result.confidence
             report = f"Confidence drawn uniformly between {confidence_range[0]:.2f} and {confidence_range[1]:.2f}"
-        elif strategy == "review":
+        else:  # strategy == "review"
             from impact_engine_evaluate.review.api import review
 
             review_result = review(job_dir, config=self._config)
@@ -98,9 +139,6 @@ class Evaluate(PipelineComponent):
                     "Review returned 0.0 with no dimensions for initiative=%s",
                     scorer_event["initiative_id"],
                 )
-        else:
-            msg = f"Unknown evaluate_strategy: {strategy!r}"
-            raise ValueError(msg)
 
         # --- Everything below is shared ---
         result = EvaluateResult(

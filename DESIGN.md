@@ -8,13 +8,9 @@ interpret. Is the effect estimate plausible? Is the model type appropriate for
 the data? Are the diagnostics healthy?
 
 The evaluate package provides a general-purpose agentic review layer that
-accepts any job directory conforming to the manifest convention, producing
-structured, auditable review judgements. A lightweight deterministic scorer
-(`score/scorer.py`) is included for debugging, testing, and illustration — it
-assigns a confidence band based on methodology type alone without examining
-the content of the results.
-
-![Review flow: Load → Select → Review → Score](img/review-flow.svg)
+accepts any job directory conforming to the manifest convention. It loads the
+manifest, selects the appropriate method reviewer, runs the review (or
+deterministic score), and returns a structured, auditable confidence judgement.
 
 ## Architecture overview
 
@@ -37,7 +33,7 @@ manifest → reviewer → scorer_event → [confidence source] → EvaluateResul
    confidence range, prompt templates, knowledge, artifact loading)
 
 Both strategies construct the same `EvaluateResult`, write
-`evaluate_result.json` to the job directory, and return the same 8-key
+`evaluate_result.json` to the job directory, and return the same 5-key
 output dict for downstream ALLOCATE. The manifest is treated as read-only.
 
 Each strategy also writes its own strategy-specific result file:
@@ -77,7 +73,19 @@ providers, so any model supported by LiteLLM can be used by setting the
 
 ### Registry pattern
 
-The method reviewer dimension uses decorator-based registration:
+`MethodReviewerRegistry` uses a class decorator for registration.  Each
+method reviewer subclass is tagged with its manifest `model_type` key:
+
+```python
+@MethodReviewerRegistry.register("experiment")
+class ExperimentReviewer(MethodReviewer):
+    ...
+```
+
+`MethodReviewerRegistry.create(model_type)` instantiates the matching
+class, raising `KeyError` for unknown types.  Built-in reviewers are
+auto-registered when `impact_engine_evaluate.review.methods` is imported,
+so no explicit registration call is required at the call site.
 
 ## Data flow
 
@@ -159,7 +167,7 @@ class ReviewResult:
     backend_name: str        # which LLM backend
     model: str               # which model
     dimensions: list[ReviewDimension]  # per-axis scores
-    overall_score: float     # aggregated (mean of dimensions)
+    overall_score: float     # LLM-reported aggregate score
     raw_response: str        # full LLM output for audit
     timestamp: str           # ISO-8601
 ```
@@ -197,7 +205,7 @@ A single YAML file or dict configures the backend:
 
 ```yaml
 backend:
-  model: claude-sonnet-4-5-20250929
+  model: claude-sonnet-4-6
   temperature: 0.0
   max_tokens: 4096
 ```
@@ -209,7 +217,7 @@ Environment variable overrides: `REVIEW_BACKEND_MODEL`,
 
 | Component | Core dependency |
 |-----------|----------------|
-| Scorer, models | `numpy` |
+| Scorer, models | stdlib (`hashlib`, `random`) |
 | LLM completions | `litellm` |
 | Template rendering | `jinja2` |
 | Config / prompt loading | `pyyaml` |
