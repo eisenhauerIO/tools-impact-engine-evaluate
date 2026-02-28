@@ -4,6 +4,23 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from pydantic import BaseModel, Field
+
+
+class DimensionResponse(BaseModel):
+    """Single dimension in a structured review response."""
+
+    name: str
+    score: float = Field(ge=0.0, le=1.0)
+    justification: str
+
+
+class ReviewResponse(BaseModel):
+    """Structured response schema for LLM review output."""
+
+    dimensions: list[DimensionResponse]
+    overall: float = Field(ge=0.0, le=1.0)
+
 
 @dataclass
 class ReviewDimension:

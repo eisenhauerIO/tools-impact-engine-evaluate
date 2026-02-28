@@ -26,11 +26,10 @@ pip install -e ".[dev]"
 - `impact_engine_evaluate/job_reader.py` — reads job directory artifacts into scorer event dicts
 - `impact_engine_evaluate/adapter.py` — orchestrator integration (`Evaluate`), symmetric strategy dispatch + shared I/O
 - `impact_engine_evaluate/config.py` — review configuration (YAML/dict/env vars)
-- `impact_engine_evaluate/review/engine.py` — `ReviewEngine` orchestrates a single LLM review
+- `impact_engine_evaluate/review/engine.py` — `ReviewEngine` calls `litellm.completion()` with structured output
 - `impact_engine_evaluate/review/api.py` — public `review(job_dir)` entry point
 - `impact_engine_evaluate/review/manifest.py` — `Manifest` dataclass, `load_manifest()` (read-only)
-- `impact_engine_evaluate/review/models.py` — data models (`ReviewResult`, `ArtifactPayload`, etc.)
-- `impact_engine_evaluate/review/backends/` — LLM backend registry (Anthropic, OpenAI, LiteLLM)
+- `impact_engine_evaluate/review/models.py` — data models (`ReviewResult`, `ReviewResponse`, `ArtifactPayload`, etc.)
 - `impact_engine_evaluate/review/methods/` — method reviewer registry; base class provides default `load_artifact`
 - `tests/` — unit tests
 

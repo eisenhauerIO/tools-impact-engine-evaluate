@@ -1,96 +1,196 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg xmlns="http://www.w3.org/2000/svg" style="background: transparent; background-color: transparent; color-scheme: light dark;" version="1.1" width="592px" height="255px" viewBox="-0.5 -0.5 592 255">
+<svg xmlns="http://www.w3.org/2000/svg" style="background: transparent; background-color: transparent; color-scheme: light dark;" version="1.1" width="602px" height="558px" viewBox="-0.5 -0.5 602 558">
   <defs/>
   <g>
-    <!-- Outer container: ReviewEngine (tab style header) -->
+    <!-- Row 1: Measurement Results (blue) -->
     <g>
-      <!-- Header (filled green) -->
-      <path d="M 590 30 L 590 13.5 Q 590 0 576.5 0 L 13.5 0 Q 0 0 0 13.5 L 0 30"
-            fill="#d5e8d4" stroke="#82b366" stroke-miterlimit="10"
-            style="fill: light-dark(rgb(213, 232, 212), rgb(31, 47, 30)); stroke: light-dark(rgb(130, 179, 102), rgb(68, 110, 44));"/>
-      <!-- Body (stroke only) -->
-      <path d="M 0 30 L 0 151.5 Q 0 165 13.5 165 L 576.5 165 Q 590 165 590 151.5 L 590 30"
-            fill="none" stroke="#82b366" stroke-miterlimit="10"
-            style="stroke: light-dark(rgb(130, 179, 102), rgb(68, 110, 44));"/>
-      <!-- Separator -->
-      <path d="M 0 30 L 590 30" fill="none" stroke="#82b366" stroke-miterlimit="10"
-            style="stroke: light-dark(rgb(130, 179, 102), rgb(68, 110, 44));"/>
-      <!-- Title -->
-      <text x="295" y="20" fill="#000000" font-family="Helvetica" font-weight="bold" text-anchor="middle" font-size="12px"
-            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">ReviewEngine</text>
-    </g>
-
-    <!-- Inner box 1: Backend Registry (blue) -->
-    <g>
-      <rect x="20" y="42" width="166" height="110" rx="5" ry="5"
+      <rect x="175" y="0" width="250" height="50" rx="7.5" ry="7.5"
             fill="#dae8fc" stroke="#6c8ebf" pointer-events="all"
             style="fill: light-dark(rgb(218, 232, 252), rgb(29, 41, 59)); stroke: light-dark(rgb(108, 142, 191), rgb(92, 121, 163));"/>
-      <line x1="20" y1="80" x2="186" y2="80" stroke="#6c8ebf"
-            style="stroke: light-dark(rgb(108, 142, 191), rgb(92, 121, 163));"/>
-      <text x="103" y="58" fill="#000000" font-family="Helvetica" font-weight="bold" text-anchor="middle" font-size="11px"
-            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">Backend</text>
-      <text x="103" y="73" fill="#000000" font-family="Helvetica" text-anchor="middle" font-size="10px"
-            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">Registry</text>
-      <text x="103" y="98" fill="#000000" font-family="Helvetica" text-anchor="middle" font-size="10px"
-            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">Anthropic</text>
-      <text x="103" y="113" fill="#000000" font-family="Helvetica" text-anchor="middle" font-size="10px"
-            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">OpenAI</text>
-      <text x="103" y="128" fill="#000000" font-family="Helvetica" text-anchor="middle" font-size="10px"
-            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">LiteLLM</text>
+      <text x="300" y="31" fill="#000000" font-family="Helvetica" font-weight="bold" text-anchor="middle" font-size="12px"
+            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">Measurement Results</text>
     </g>
 
-    <!-- Inner box 2: Prompt Template (yellow) -->
+    <!-- Arrow: Results → Router -->
     <g>
-      <rect x="212" y="42" width="166" height="110" rx="5" ry="5"
-            fill="#fff2cc" stroke="#d6b656" pointer-events="all"
-            style="fill: light-dark(rgb(255, 242, 204), rgb(40, 29, 0)); stroke: light-dark(rgb(214, 182, 86), rgb(109, 81, 0));"/>
-      <line x1="212" y1="80" x2="378" y2="80" stroke="#d6b656"
-            style="stroke: light-dark(rgb(214, 182, 86), rgb(109, 81, 0));"/>
-      <text x="295" y="58" fill="#000000" font-family="Helvetica" font-weight="bold" text-anchor="middle" font-size="11px"
-            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">Prompt</text>
-      <text x="295" y="73" fill="#000000" font-family="Helvetica" text-anchor="middle" font-size="10px"
-            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">Template + Renderer</text>
-      <text x="295" y="98" fill="#000000" font-family="Helvetica" text-anchor="middle" font-size="10px"
-            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">YAML / Jinja</text>
-      <text x="295" y="113" fill="#000000" font-family="Helvetica" text-anchor="middle" font-size="10px"
-            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">Templates</text>
-    </g>
-
-    <!-- Inner box 3: Knowledge Base (orange) -->
-    <g>
-      <rect x="404" y="42" width="166" height="110" rx="5" ry="5"
-            fill="#ffe6cc" stroke="#d79b00" pointer-events="all"
-            style="fill: light-dark(rgb(255, 230, 204), rgb(54, 33, 10)); stroke: light-dark(rgb(215, 155, 0), rgb(153, 101, 0));"/>
-      <line x1="404" y1="80" x2="570" y2="80" stroke="#d79b00"
-            style="stroke: light-dark(rgb(215, 155, 0), rgb(153, 101, 0));"/>
-      <text x="487" y="58" fill="#000000" font-family="Helvetica" font-weight="bold" text-anchor="middle" font-size="11px"
-            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">Knowledge</text>
-      <text x="487" y="73" fill="#000000" font-family="Helvetica" text-anchor="middle" font-size="10px"
-            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">Base (optional)</text>
-      <text x="487" y="98" fill="#000000" font-family="Helvetica" text-anchor="middle" font-size="10px"
-            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">Static Markdown</text>
-      <text x="487" y="113" fill="#000000" font-family="Helvetica" text-anchor="middle" font-size="10px"
-            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">Files</text>
-    </g>
-
-    <!-- Down arrow to ReviewResult -->
-    <g>
-      <path d="M 295 165 L 295 189" fill="none" stroke="#666666" stroke-width="2" stroke-miterlimit="10"
+      <path d="M 300 50 L 300 77" fill="none" stroke="#666666" stroke-width="2" stroke-miterlimit="10"
             style="stroke: light-dark(rgb(102, 102, 102), rgb(149, 149, 149));"/>
-      <path d="M 295 196 L 291 188 L 295 190 L 299 188 Z" fill="#666666" stroke="#666666" stroke-width="2" stroke-miterlimit="10"
+      <path d="M 300 84 L 296 76 L 300 78 L 304 76 Z" fill="#666666" stroke="#666666" stroke-width="2" stroke-miterlimit="10"
             style="fill: light-dark(rgb(102, 102, 102), rgb(149, 149, 149)); stroke: light-dark(rgb(102, 102, 102), rgb(149, 149, 149));"/>
     </g>
 
-    <!-- ReviewResult (purple) -->
+    <!-- Row 2: Evaluation Router (green) -->
     <g>
-      <rect x="195" y="198" width="200" height="50" rx="7.5" ry="7.5"
+      <rect x="175" y="84" width="250" height="50" rx="7.5" ry="7.5"
+            fill="#d5e8d4" stroke="#82b366" pointer-events="all"
+            style="fill: light-dark(rgb(213, 232, 212), rgb(31, 47, 30)); stroke: light-dark(rgb(130, 179, 102), rgb(68, 110, 44));"/>
+      <text x="300" y="115" fill="#000000" font-family="Helvetica" font-weight="bold" text-anchor="middle" font-size="12px"
+            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">Evaluation Router</text>
+    </g>
+
+    <!-- Arrow: Router → Evaluation Engine -->
+    <g>
+      <path d="M 300 134 L 300 161" fill="none" stroke="#666666" stroke-width="2" stroke-miterlimit="10"
+            style="stroke: light-dark(rgb(102, 102, 102), rgb(149, 149, 149));"/>
+      <path d="M 300 168 L 296 160 L 300 162 L 304 160 Z" fill="#666666" stroke="#666666" stroke-width="2" stroke-miterlimit="10"
+            style="fill: light-dark(rgb(102, 102, 102), rgb(149, 149, 149)); stroke: light-dark(rgb(102, 102, 102), rgb(149, 149, 149));"/>
+    </g>
+
+    <!-- Evaluation Engine container (green, tab-style) -->
+    <g>
+      <!-- Header (filled green) -->
+      <path d="M 588 186 L 588 169.5 Q 588 156 574.5 156 L 23.5 156 Q 10 156 10 169.5 L 10 186"
+            fill="#d5e8d4" stroke="#82b366" stroke-miterlimit="10"
+            style="fill: light-dark(rgb(213, 232, 212), rgb(31, 47, 30)); stroke: light-dark(rgb(130, 179, 102), rgb(68, 110, 44));"/>
+      <!-- Body (stroke only) -->
+      <path d="M 10 186 L 10 444.5 Q 10 458 23.5 458 L 574.5 458 Q 588 458 588 444.5 L 588 186"
+            fill="none" stroke="#82b366" stroke-miterlimit="10"
+            style="stroke: light-dark(rgb(130, 179, 102), rgb(68, 110, 44));"/>
+      <!-- Separator -->
+      <path d="M 10 186 L 588 186" fill="none" stroke="#82b366" stroke-miterlimit="10"
+            style="stroke: light-dark(rgb(130, 179, 102), rgb(68, 110, 44));"/>
+      <!-- Title -->
+      <text x="299" y="176" fill="#000000" font-family="Helvetica" font-weight="bold" text-anchor="middle" font-size="12px"
+            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">Evaluation Engine</text>
+    </g>
+
+    <!-- Prompt Builder (yellow bar, shared) -->
+    <g>
+      <rect x="20" y="196" width="558" height="30" rx="5" ry="5"
+            fill="#fff2cc" stroke="#d6b656" pointer-events="all"
+            style="fill: light-dark(rgb(255, 242, 204), rgb(40, 29, 0)); stroke: light-dark(rgb(214, 182, 86), rgb(109, 81, 0));"/>
+      <text x="299" y="215" fill="#000000" font-family="Helvetica" font-weight="bold" text-anchor="middle" font-size="11px"
+            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">Prompt Builder</text>
+    </g>
+
+    <!-- LLM Backends (blue background, wraps agents) — drawn first so agents render on top -->
+    <g>
+      <rect x="20" y="248" width="558" height="160" rx="7.5" ry="7.5"
+            fill="#dae8fc" stroke="#6c8ebf" pointer-events="all"
+            style="fill: light-dark(rgb(218, 232, 252), rgb(29, 41, 59)); stroke: light-dark(rgb(108, 142, 191), rgb(92, 121, 163));"/>
+      <text x="299" y="380" fill="#000000" font-family="Helvetica" font-weight="bold" text-anchor="middle" font-size="11px"
+            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">LLM Backends</text>
+      <text x="299" y="396" fill="#000000" font-family="Helvetica" text-anchor="middle" font-size="9px"
+            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">Anthropic · OpenAI · via LiteLLM</text>
+    </g>
+
+    <!-- Fan-out: Prompt Builder → Agents (T-junction) -->
+    <g>
+      <!-- Stem from Prompt Builder -->
+      <path d="M 299 226 L 299 242" fill="none" stroke="#666666" stroke-width="2" stroke-miterlimit="10"
+            style="stroke: light-dark(rgb(102, 102, 102), rgb(149, 149, 149));"/>
+      <!-- Horizontal bus -->
+      <path d="M 115 242 L 485 242" fill="none" stroke="#666666" stroke-width="2" stroke-miterlimit="10"
+            style="stroke: light-dark(rgb(102, 102, 102), rgb(149, 149, 149));"/>
+      <!-- Left drop -->
+      <path d="M 115 242 L 115 252" fill="none" stroke="#666666" stroke-width="2" stroke-miterlimit="10"
+            style="stroke: light-dark(rgb(102, 102, 102), rgb(149, 149, 149));"/>
+      <path d="M 115 260 L 111 252 L 115 254 L 119 252 Z" fill="#666666" stroke="#666666" stroke-width="2" stroke-miterlimit="10"
+            style="fill: light-dark(rgb(102, 102, 102), rgb(149, 149, 149)); stroke: light-dark(rgb(102, 102, 102), rgb(149, 149, 149));"/>
+      <!-- Center drop -->
+      <path d="M 300 242 L 300 252" fill="none" stroke="#666666" stroke-width="2" stroke-miterlimit="10"
+            style="stroke: light-dark(rgb(102, 102, 102), rgb(149, 149, 149));"/>
+      <path d="M 300 260 L 296 252 L 300 254 L 304 252 Z" fill="#666666" stroke="#666666" stroke-width="2" stroke-miterlimit="10"
+            style="fill: light-dark(rgb(102, 102, 102), rgb(149, 149, 149)); stroke: light-dark(rgb(102, 102, 102), rgb(149, 149, 149));"/>
+      <!-- Right drop -->
+      <path d="M 485 242 L 485 252" fill="none" stroke="#666666" stroke-width="2" stroke-miterlimit="10"
+            style="stroke: light-dark(rgb(102, 102, 102), rgb(149, 149, 149));"/>
+      <path d="M 485 260 L 481 252 L 485 254 L 489 252 Z" fill="#666666" stroke="#666666" stroke-width="2" stroke-miterlimit="10"
+            style="fill: light-dark(rgb(102, 102, 102), rgb(149, 149, 149)); stroke: light-dark(rgb(102, 102, 102), rgb(149, 149, 149));"/>
+    </g>
+
+    <!-- Agent boxes (method-specific, inside LLM Backends) -->
+
+    <!-- Experiment (solid) -->
+    <g>
+      <rect x="30" y="260" width="170" height="96" rx="5" ry="5"
+            fill="#d5e8d4" stroke="#82b366" pointer-events="all"
+            style="fill: light-dark(rgb(213, 232, 212), rgb(31, 47, 30)); stroke: light-dark(rgb(130, 179, 102), rgb(68, 110, 44));"/>
+      <line x1="30" y1="290" x2="200" y2="290" stroke="#82b366"
+            style="stroke: light-dark(rgb(130, 179, 102), rgb(68, 110, 44));"/>
+      <text x="115" y="280" fill="#000000" font-family="Helvetica" font-weight="bold" text-anchor="middle" font-size="11px"
+            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">Experiment</text>
+      <rect x="40" y="296" width="150" height="22" rx="3" ry="3"
+            fill="#fff2cc" stroke="#d6b656" pointer-events="all"
+            style="fill: light-dark(rgb(255, 242, 204), rgb(40, 29, 0)); stroke: light-dark(rgb(214, 182, 86), rgb(109, 81, 0));"/>
+      <text x="115" y="311" fill="#000000" font-family="Helvetica" text-anchor="middle" font-size="10px"
+            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">Prompts</text>
+      <rect x="40" y="324" width="150" height="22" rx="3" ry="3"
+            fill="#ffe6cc" stroke="#d79b00" pointer-events="all"
+            style="fill: light-dark(rgb(255, 230, 204), rgb(54, 33, 10)); stroke: light-dark(rgb(215, 155, 0), rgb(153, 101, 0));"/>
+      <text x="115" y="339" fill="#000000" font-family="Helvetica" text-anchor="middle" font-size="10px"
+            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">Knowledge</text>
+    </g>
+
+    <!-- Diff-in-Diff (dashed) -->
+    <g>
+      <rect x="215" y="260" width="170" height="96" rx="5" ry="5"
+            fill="#d5e8d4" stroke="#82b366" pointer-events="all"
+            style="fill: light-dark(rgb(213, 232, 212), rgb(31, 47, 30)); stroke: light-dark(rgb(130, 179, 102), rgb(68, 110, 44));"/>
+      <line x1="215" y1="290" x2="385" y2="290" stroke="#82b366"
+            style="stroke: light-dark(rgb(130, 179, 102), rgb(68, 110, 44));"/>
+      <text x="300" y="280" fill="#000000" font-family="Helvetica" font-weight="bold" text-anchor="middle" font-size="11px"
+            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">Diff-in-Diff</text>
+      <rect x="225" y="296" width="150" height="22" rx="3" ry="3"
+            fill="#fff2cc" stroke="#d6b656" pointer-events="all"
+            style="fill: light-dark(rgb(255, 242, 204), rgb(40, 29, 0)); stroke: light-dark(rgb(214, 182, 86), rgb(109, 81, 0));"/>
+      <text x="300" y="311" fill="#000000" font-family="Helvetica" text-anchor="middle" font-size="10px"
+            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">Prompts</text>
+      <rect x="225" y="324" width="150" height="22" rx="3" ry="3"
+            fill="#ffe6cc" stroke="#d79b00" pointer-events="all"
+            style="fill: light-dark(rgb(255, 230, 204), rgb(54, 33, 10)); stroke: light-dark(rgb(215, 155, 0), rgb(153, 101, 0));"/>
+      <text x="300" y="339" fill="#000000" font-family="Helvetica" text-anchor="middle" font-size="10px"
+            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">Knowledge</text>
+    </g>
+
+    <!-- Synth. Control (dashed) -->
+    <g>
+      <rect x="400" y="260" width="170" height="96" rx="5" ry="5"
+            fill="#d5e8d4" stroke="#82b366" pointer-events="all"
+            style="fill: light-dark(rgb(213, 232, 212), rgb(31, 47, 30)); stroke: light-dark(rgb(130, 179, 102), rgb(68, 110, 44));"/>
+      <line x1="400" y1="290" x2="570" y2="290" stroke="#82b366"
+            style="stroke: light-dark(rgb(130, 179, 102), rgb(68, 110, 44));"/>
+      <text x="485" y="280" fill="#000000" font-family="Helvetica" font-weight="bold" text-anchor="middle" font-size="11px"
+            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">Synth. Control</text>
+      <rect x="410" y="296" width="150" height="22" rx="3" ry="3"
+            fill="#fff2cc" stroke="#d6b656" pointer-events="all"
+            style="fill: light-dark(rgb(255, 242, 204), rgb(40, 29, 0)); stroke: light-dark(rgb(214, 182, 86), rgb(109, 81, 0));"/>
+      <text x="485" y="311" fill="#000000" font-family="Helvetica" text-anchor="middle" font-size="10px"
+            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">Prompts</text>
+      <rect x="410" y="324" width="150" height="22" rx="3" ry="3"
+            fill="#ffe6cc" stroke="#d79b00" pointer-events="all"
+            style="fill: light-dark(rgb(255, 230, 204), rgb(54, 33, 10)); stroke: light-dark(rgb(215, 155, 0), rgb(153, 101, 0));"/>
+      <text x="485" y="339" fill="#000000" font-family="Helvetica" text-anchor="middle" font-size="10px"
+            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">Knowledge</text>
+    </g>
+
+    <!-- Results Builder (yellow bar, shared) -->
+    <g>
+      <rect x="20" y="418" width="558" height="30" rx="5" ry="5"
+            fill="#fff2cc" stroke="#d6b656" pointer-events="all"
+            style="fill: light-dark(rgb(255, 242, 204), rgb(40, 29, 0)); stroke: light-dark(rgb(214, 182, 86), rgb(109, 81, 0));"/>
+      <text x="299" y="437" fill="#000000" font-family="Helvetica" font-weight="bold" text-anchor="middle" font-size="11px"
+            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">Results Builder</text>
+    </g>
+
+    <!-- Arrow: Evaluation Engine → Evaluation Result -->
+    <g>
+      <path d="M 299 458 L 299 485" fill="none" stroke="#666666" stroke-width="2" stroke-miterlimit="10"
+            style="stroke: light-dark(rgb(102, 102, 102), rgb(149, 149, 149));"/>
+      <path d="M 299 492 L 295 484 L 299 486 L 303 484 Z" fill="#666666" stroke="#666666" stroke-width="2" stroke-miterlimit="10"
+            style="fill: light-dark(rgb(102, 102, 102), rgb(149, 149, 149)); stroke: light-dark(rgb(102, 102, 102), rgb(149, 149, 149));"/>
+    </g>
+
+    <!-- Evaluation Result (purple) -->
+    <g>
+      <rect x="190" y="492" width="220" height="50" rx="7.5" ry="7.5"
             fill="#e1d5e7" stroke="#9673a6" pointer-events="all"
             style="fill: light-dark(rgb(225, 213, 231), rgb(57, 47, 63)); stroke: light-dark(rgb(150, 115, 166), rgb(149, 119, 163));"/>
-      <text x="295" y="218" fill="#000000" font-family="Helvetica" font-weight="bold" text-anchor="middle" font-size="11px"
-            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">ReviewResult</text>
-      <text x="295" y="236" fill="#000000" font-family="Helvetica" text-anchor="middle" font-size="9px"
-            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">dimensions · overall_score · raw_response</text>
+      <text x="300" y="514" fill="#000000" font-family="Helvetica" font-weight="bold" text-anchor="middle" font-size="11px"
+            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">Evaluation Result</text>
+      <text x="300" y="530" fill="#000000" font-family="Helvetica" text-anchor="middle" font-size="9px"
+            style="fill: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));">Confidence Scores · Reasoning</text>
     </g>
   </g>
 </svg>

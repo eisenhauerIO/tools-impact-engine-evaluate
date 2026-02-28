@@ -2,17 +2,23 @@
 
 from __future__ import annotations
 
-import json
 import logging
-import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+import jinja2
+import litellm
+import yaml
+
 from impact_engine_evaluate.config import ReviewConfig, load_config
-from impact_engine_evaluate.review.backends import BackendRegistry
-from impact_engine_evaluate.review.backends.base import Backend
-from impact_engine_evaluate.review.models import ArtifactPayload, PromptSpec, ReviewDimension, ReviewResult
+from impact_engine_evaluate.review.models import (
+    ArtifactPayload,
+    PromptSpec,
+    ReviewDimension,
+    ReviewResponse,
+    ReviewResult,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -60,8 +66,6 @@ def load_prompt_spec(path: Path) -> PromptSpec:
 def render(spec: PromptSpec, variables: dict[str, Any]) -> list[dict[str, str]]:
     """Render a prompt spec into chat messages.
 
-    Uses Jinja2 if available, otherwise falls back to ``str.format_map``.
-
     Parameters
     ----------
     spec : PromptSpec
@@ -72,7 +76,7 @@ def render(spec: PromptSpec, variables: dict[str, Any]) -> list[dict[str, str]]:
     Returns
     -------
     list[dict[str, str]]
-        Chat messages suitable for ``Backend.complete``.
+        Chat messages suitable for LLM completion.
     """
     system_text = _render_template(spec.system_template, variables)
     user_text = _render_template(spec.user_template, variables)
@@ -117,32 +121,32 @@ def load_knowledge(directory: Path) -> str:
 
 
 class ReviewEngine:
-    """Execute an artifact review using a configured backend.
+    """Execute an artifact review via LiteLLM.
 
     Parameters
     ----------
-    backend : Backend
-        LLM backend for completions.
-    default_model : str | None
-        Default model override for the backend.
+    default_model : str
+        Default model identifier for completions.
     default_temperature : float
         Default temperature for completions.
     default_max_tokens : int
         Default max tokens for completions.
+    litellm_extra : dict[str, Any] | None
+        Additional kwargs forwarded to ``litellm.completion()``.
     """
 
     def __init__(
         self,
-        backend: Backend,
         *,
-        default_model: str | None = None,
+        default_model: str = "claude-sonnet-4-5-20250929",
         default_temperature: float = 0.0,
         default_max_tokens: int = 4096,
+        litellm_extra: dict[str, Any] | None = None,
     ) -> None:
-        self._backend = backend
         self._default_model = default_model
         self._default_temperature = default_temperature
         self._default_max_tokens = default_max_tokens
+        self._litellm_extra = litellm_extra or {}
 
     @classmethod
     def from_config(cls, config: ReviewConfig | dict | str | None = None) -> ReviewEngine:
@@ -161,17 +165,11 @@ class ReviewEngine:
         if not isinstance(config, ReviewConfig):
             config = load_config(config)
 
-        backend = BackendRegistry.create(
-            config.backend.type,
-            model=config.backend.model,
-            **config.backend.extra,
-        )
-
         return cls(
-            backend=backend,
             default_model=config.backend.model,
             default_temperature=config.backend.temperature,
             default_max_tokens=config.backend.max_tokens,
+            litellm_extra=config.backend.extra,
         )
 
     def review(
@@ -214,29 +212,37 @@ class ReviewEngine:
             **artifact.metadata,
         }
 
-        # Render and call backend
+        # Render and call LiteLLM
         messages = render(spec, variables)
-        used_model = model or self._default_model or ""
-        raw_response = self._backend.complete(
-            messages,
-            model=model or self._default_model,
-            temperature=temperature if temperature is not None else self._default_temperature,
-            max_tokens=max_tokens or self._default_max_tokens,
-        )
+        used_model = model or self._default_model
 
-        # Parse response
-        dimensions = _parse_dimensions(raw_response, spec.dimensions)
-        overall = _parse_overall(raw_response, dimensions)
+        kwargs: dict[str, Any] = {
+            "model": used_model,
+            "messages": messages,
+            "temperature": temperature if temperature is not None else self._default_temperature,
+            "max_tokens": max_tokens or self._default_max_tokens,
+            "response_format": ReviewResponse,
+            **self._litellm_extra,
+        }
+        logger.debug("litellm request model=%s messages=%d", kwargs["model"], len(messages))
+        response = litellm.completion(**kwargs)
+        parsed: ReviewResponse = response.choices[0].message.parsed
+
+        # Convert structured response to dataclass models
+        dimensions = [
+            ReviewDimension(name=d.name, score=d.score, justification=d.justification) for d in parsed.dimensions
+        ]
+        overall = parsed.overall
 
         result = ReviewResult(
             initiative_id=artifact.initiative_id,
             prompt_name=spec.name,
             prompt_version=spec.version,
-            backend_name=self._backend.name,
+            backend_name="litellm",
             model=used_model,
             dimensions=dimensions,
             overall_score=overall,
-            raw_response=raw_response,
+            raw_response=parsed.model_dump_json(),
             timestamp=datetime.now(timezone.utc).isoformat(),
         )
 
@@ -250,194 +256,19 @@ class ReviewEngine:
 
 
 # ---------------------------------------------------------------------------
-# Response parsing
-# ---------------------------------------------------------------------------
-
-
-def _parse_dimensions(response: str, expected: list[str]) -> list[ReviewDimension]:
-    """Parse DIMENSION/SCORE/JUSTIFICATION blocks from a response.
-
-    Also attempts JSON parsing as a fallback.
-
-    Parameters
-    ----------
-    response : str
-        Raw LLM response text.
-    expected : list[str]
-        Expected dimension names (for fallback ordering).
-
-    Returns
-    -------
-    list[ReviewDimension]
-    """
-    dimensions: list[ReviewDimension] = []
-
-    # Try structured text parsing first
-    pattern = re.compile(
-        r"DIMENSION:\s*(?P<name>\S+)\s*\n"
-        r"SCORE:\s*(?P<score>[\d.]+)\s*\n"
-        r"JUSTIFICATION:\s*(?P<justification>.+?)(?=\nDIMENSION:|\nOVERALL:|\Z)",
-        re.DOTALL,
-    )
-    for match in pattern.finditer(response):
-        try:
-            score = float(match.group("score"))
-        except ValueError:
-            score = 0.0
-        dimensions.append(
-            ReviewDimension(
-                name=match.group("name").strip(),
-                score=max(0.0, min(1.0, score)),
-                justification=match.group("justification").strip(),
-            )
-        )
-
-    if dimensions:
-        return dimensions
-
-    # Fallback: try JSON
-    try:
-        data = json.loads(response)
-        if isinstance(data, dict) and "dimensions" in data:
-            for d in data["dimensions"]:
-                dimensions.append(
-                    ReviewDimension(
-                        name=d.get("name", "unknown"),
-                        score=max(0.0, min(1.0, float(d.get("score", 0.0)))),
-                        justification=d.get("justification", ""),
-                    )
-                )
-    except (json.JSONDecodeError, TypeError, KeyError):
-        pass
-
-    return dimensions
-
-
-def _parse_overall(response: str, dimensions: list[ReviewDimension]) -> float:
-    """Extract the overall score from the response, or compute from dimensions.
-
-    Parameters
-    ----------
-    response : str
-        Raw LLM response text.
-    dimensions : list[ReviewDimension]
-        Parsed dimensions for fallback averaging.
-
-    Returns
-    -------
-    float
-    """
-    match = re.search(r"OVERALL:\s*([\d.]+)", response)
-    if match:
-        try:
-            return max(0.0, min(1.0, float(match.group(1))))
-        except ValueError:
-            pass
-
-    if dimensions:
-        return sum(d.score for d in dimensions) / len(dimensions)
-
-    return 0.0
-
-
-# ---------------------------------------------------------------------------
-# Internal YAML loading
+# Internal utilities
 # ---------------------------------------------------------------------------
 
 
 def _load_yaml(path: Path) -> dict[str, Any]:
-    """Load a YAML file, using PyYAML if available, else a minimal parser."""
-    try:
-        import yaml
-
-        with open(path, encoding="utf-8") as fh:
-            return yaml.safe_load(fh) or {}
-    except ImportError:
-        return _minimal_yaml_load(path)
-
-
-def _minimal_yaml_load(path: Path) -> dict[str, Any]:
-    """Minimal YAML-subset parser for prompt template files.
-
-    Handles top-level scalar keys, lists, and multiline ``|`` blocks.
-    Install PyYAML for full YAML support.
-    """
-    result: dict[str, Any] = {}
-    current_key: str | None = None
-    block_lines: list[str] = []
-    block_indent: int | None = None
-    key = ""
-
-    def _flush() -> None:
-        if current_key and block_lines:
-            result[current_key] = "\n".join(block_lines)
-
+    """Load a YAML file."""
     with open(path, encoding="utf-8") as fh:
-        for raw_line in fh:
-            line = raw_line.rstrip("\n")
-
-            if current_key is None and (not line.strip() or line.strip().startswith("#")):
-                continue
-
-            if current_key is not None:
-                stripped = line.lstrip()
-                indent = len(line) - len(stripped)
-                if block_indent is None:
-                    if stripped:
-                        block_indent = indent
-                    else:
-                        block_lines.append("")
-                        continue
-
-                if indent >= block_indent and stripped:
-                    block_lines.append(line[block_indent:])
-                    continue
-                elif not stripped:
-                    block_lines.append("")
-                    continue
-                else:
-                    _flush()
-                    current_key = None
-                    block_lines = []
-                    block_indent = None
-
-            if ":" in line and not line[0].isspace():
-                key, _, value = line.partition(":")
-                key = key.strip()
-                value = value.strip()
-                if value == "|":
-                    current_key = key
-                    block_lines = []
-                    block_indent = None
-                elif value.startswith("["):
-                    items = value.strip("[]").split(",")
-                    result[key] = [i.strip().strip("\"'") for i in items if i.strip()]
-                elif value.startswith("-"):
-                    result[key] = [value.lstrip("- ").strip("\"'")]
-                else:
-                    result[key] = value.strip("\"'")
-
-            elif line.strip().startswith("- ") and isinstance(result.get(key), list):
-                result[key].append(line.strip().lstrip("- ").strip("\"'"))
-
-    _flush()
-    return result
+        return yaml.safe_load(fh) or {}
 
 
 def _render_template(template: str, variables: dict[str, Any]) -> str:
-    """Render a single template string with Jinja2 or fallback."""
+    """Render a Jinja2 template string."""
     if not template:
         return ""
-    try:
-        import jinja2
-
-        env = jinja2.Environment(undefined=jinja2.Undefined)
-        return env.from_string(template).render(**variables)
-    except ImportError:
-        converted = re.sub(r"\{\{-?\s*", "{", template)
-        converted = re.sub(r"\s*-?\}\}", "}", converted)
-        converted = re.sub(r"\{%.*?%\}", "", converted)
-        try:
-            return converted.format_map(variables)
-        except KeyError:
-            return converted
+    env = jinja2.Environment(undefined=jinja2.Undefined)
+    return env.from_string(template).render(**variables)

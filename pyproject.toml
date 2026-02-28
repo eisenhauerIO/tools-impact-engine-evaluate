@@ -5,21 +5,16 @@ build-backend = "hatchling.build"
 [project]
 name = "impact-engine-evaluate"
 version = "0.1.0"
-description = "Confidence scoring and agentic artifact review for the impact engine pipeline."
+description = "Confidence scoring and artifact review for the impact engine pipeline."
 authors = [
   { name = "eisenhauerIO", email = "info@eisenhauer.io" }
 ]
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = ["numpy"]
+dependencies = ["numpy", "litellm>=1.50", "jinja2>=3.1", "pyyaml>=6.0"]
 
 [project.optional-dependencies]
 dev = ["pytest", "ruff", "pre-commit"]
-review = ["jinja2>=3.1"]
-anthropic = ["jinja2>=3.1", "anthropic>=0.40"]
-openai = ["jinja2>=3.1", "openai>=1.50"]
-litellm = ["jinja2>=3.1", "litellm>=1.50"]
-all = ["jinja2>=3.1", "anthropic>=0.40", "openai>=1.50", "litellm>=1.50"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["impact_engine_evaluate"]

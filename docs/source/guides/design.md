@@ -87,38 +87,37 @@ only when they need method-specific loading.
 
 | File | Role |
 |------|------|
-| `review/models.py` | Data models: `ReviewResult`, `ReviewDimension`, `ArtifactPayload`, `PromptSpec` |
-| `review/engine.py` | `ReviewEngine` — orchestrates a single review: load prompt, render, call backend, parse |
+| `review/models.py` | Data models: `ReviewResult`, `ReviewDimension`, `ReviewResponse`, `ArtifactPayload`, `PromptSpec` |
+| `review/engine.py` | `ReviewEngine` — orchestrates a single review: load prompt, render, call `litellm.completion()` with structured output |
 | `review/api.py` | Public `review()` function — end-to-end review of a job directory |
 | `review/manifest.py` | `Manifest` dataclass + `load_manifest()` (read-only) |
-| `review/backends/base.py` | `Backend` ABC + `BackendRegistry` |
-| `review/backends/anthropic_backend.py` | Anthropic Messages API backend |
-| `review/backends/openai_backend.py` | OpenAI Chat Completions backend |
-| `review/backends/litellm_backend.py` | LiteLLM unified backend (100+ providers) |
 | `review/methods/base.py` | `MethodReviewer` base (default `load_artifact`) + `MethodReviewerRegistry` |
 | `review/methods/experiment/` | Experiment (RCT) reviewer with prompt templates and knowledge |
 | `config.py` | `ReviewConfig` — loads from YAML, dict, or env vars |
+
+### LLM backend
+
+The review engine calls `litellm.completion()` directly with a Pydantic
+`response_format` (`ReviewResponse`), producing structured JSON that maps
+directly to dimension scores and an overall score. LiteLLM wraps 100+
+providers, so any model supported by LiteLLM can be used by setting the
+`model` field in config.
 
 ---
 
 ## Registry pattern
 
-Both pluggable dimensions use the same decorator-based idiom:
+Method reviewers use decorator-based registration:
 
 ```python
-@BackendRegistry.register("anthropic")
-class AnthropicBackend(Backend): ...
-
 @MethodReviewerRegistry.register("experiment")
 class ExperimentReviewer(MethodReviewer): ...
 ```
 
-This allows extension without modifying package code. Backends auto-register on
-import. Missing SDKs are silently skipped.
+This allows extension without modifying package code.
 
 | Dimension | ABC | Registry | What it provides |
 |-----------|-----|----------|-----------------|
-| **Backend** | `Backend` | `BackendRegistry` | *How* to call an LLM |
 | **Method** | `MethodReviewer` | `MethodReviewerRegistry` | *What* to ask + how to read artifacts + domain knowledge |
 
 ---
@@ -220,17 +219,10 @@ user: |
   Model type: {{ model_type }}
 ```
 
-The engine instructs the LLM to respond in a structured format:
-
-```
-DIMENSION: <name>
-SCORE: <float 0.0–1.0>
-JUSTIFICATION: <text>
-...
-OVERALL: <float>
-```
-
-JSON fallback parsing is also supported.
+The engine uses LiteLLM's `response_format` with a Pydantic model
+(`ReviewResponse`) to get structured JSON output directly from the LLM.
+The response maps to dimension scores and an overall score without any
+text parsing.
 
 ---
 
@@ -268,16 +260,15 @@ job-impact-engine-XXXX/
 
 ## Dependency strategy
 
-| Component | Core dependency | Optional extra |
-|-----------|----------------|----------------|
-| Scorer, models | None | — |
-| Template rendering | None | `jinja2` (graceful fallback) |
-| AnthropicBackend | No | `anthropic` |
-| OpenAIBackend | No | `openai` |
-| LiteLLMBackend | No | `litellm` |
+| Component | Core dependency |
+|-----------|----------------|
+| Scorer, models | `numpy` |
+| LLM completions | `litellm` |
+| Template rendering | `jinja2` |
+| Config / prompt loading | `pyyaml` |
 
-The core review subsystem has zero required dependencies beyond the standard
-library. Backend SDKs and Jinja2 are optional extras.
+All review dependencies (`litellm`, `jinja2`, `pyyaml`) are core
+requirements in `pyproject.toml`.
 
 ---
 

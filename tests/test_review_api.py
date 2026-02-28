@@ -3,36 +3,23 @@
 import json
 import tempfile
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from impact_engine_evaluate.review import engine as _engine_mod
 from impact_engine_evaluate.review.api import review
+from impact_engine_evaluate.review.models import DimensionResponse, ReviewResponse
 
-SAMPLE_RESPONSE = """\
-DIMENSION: randomization_integrity
-SCORE: 0.85
-JUSTIFICATION: Good balance across covariates.
-
-DIMENSION: specification_adequacy
-SCORE: 0.80
-JUSTIFICATION: Appropriate OLS specification.
-
-DIMENSION: statistical_inference
-SCORE: 0.75
-JUSTIFICATION: CIs reported, no multiple testing correction.
-
-DIMENSION: threats_to_validity
-SCORE: 0.70
-JUSTIFICATION: Some attrition noted.
-
-DIMENSION: effect_size_plausibility
-SCORE: 0.90
-JUSTIFICATION: Effect size is realistic.
-
-OVERALL: 0.80
-"""
+SAMPLE_PARSED = ReviewResponse(
+    dimensions=[
+        DimensionResponse(name="randomization_integrity", score=0.85, justification="Good balance across covariates."),
+        DimensionResponse(name="specification_adequacy", score=0.80, justification="Appropriate OLS specification."),
+        DimensionResponse(name="statistical_inference", score=0.75, justification="CIs reported."),
+        DimensionResponse(name="threats_to_validity", score=0.70, justification="Some attrition noted."),
+        DimensionResponse(name="effect_size_plausibility", score=0.90, justification="Effect size is realistic."),
+    ],
+    overall=0.80,
+)
 
 
 def _make_job_dir():
@@ -58,19 +45,23 @@ def _make_job_dir():
     return tmpdir
 
 
-@patch.object(_engine_mod, "BackendRegistry")
-def test_review_end_to_end(mock_registry_cls):
-    mock_backend = mock_registry_cls.create.return_value
-    mock_backend.name = "mock"
-    mock_backend.complete.return_value = SAMPLE_RESPONSE
+def _mock_litellm_completion():
+    return MagicMock(
+        choices=[MagicMock(message=MagicMock(parsed=SAMPLE_PARSED, content=SAMPLE_PARSED.model_dump_json()))]
+    )
+
+
+@patch("impact_engine_evaluate.review.engine.litellm")
+def test_review_end_to_end(mock_litellm):
+    mock_litellm.completion.return_value = _mock_litellm_completion()
 
     job_dir = _make_job_dir()
-    result = review(job_dir, config={"backend": {"type": "mock", "model": "mock-model"}})
+    result = review(job_dir, config={"backend": {"model": "mock-model"}})
 
     assert result.overall_score == 0.80
     assert len(result.dimensions) == 5
     assert result.prompt_name == "experiment_review"
-    assert result.initiative_id  # has identity
+    assert result.initiative_id
 
     # Result file written
     result_path = Path(job_dir) / "review_result.json"
@@ -84,20 +75,17 @@ def test_review_end_to_end(mock_registry_cls):
     assert "review_result" not in manifest_data.get("files", {})
 
 
-@patch.object(_engine_mod, "BackendRegistry")
-def test_review_returns_review_result(mock_registry_cls):
-    mock_backend = mock_registry_cls.create.return_value
-    mock_backend.name = "mock"
-    mock_backend.complete.return_value = SAMPLE_RESPONSE
+@patch("impact_engine_evaluate.review.engine.litellm")
+def test_review_returns_review_result(mock_litellm):
+    mock_litellm.completion.return_value = _mock_litellm_completion()
 
     job_dir = _make_job_dir()
-    result = review(job_dir, config={"backend": {"type": "mock"}})
+    result = review(job_dir, config={"backend": {"model": "mock-model"}})
 
     from impact_engine_evaluate.review.models import ReviewResult
 
     assert isinstance(result, ReviewResult)
-    assert result.backend_name == "mock"
-    assert result.raw_response == SAMPLE_RESPONSE
+    assert result.backend_name == "litellm"
     assert result.timestamp
 
 

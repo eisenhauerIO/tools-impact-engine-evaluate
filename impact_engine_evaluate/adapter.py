@@ -32,8 +32,9 @@ class Evaluate(PipelineComponent):
     """Unified evaluate component with score and review strategies.
 
     Reads a job directory, dispatches on ``evaluate_strategy`` from the
-    manifest, and returns a common 8-key output dict for downstream ALLOCATE.
-    Both strategies share the same flow — only the confidence source differs.
+    manifest, and returns an :class:`EvaluateResult` dict for downstream
+    stages.  Both strategies share the same flow — only the confidence
+    source and report differ.
 
     Parameters
     ----------
@@ -57,9 +58,8 @@ class Evaluate(PipelineComponent):
         Returns
         -------
         dict
-            Eight-key output: ``initiative_id``, ``confidence``, ``cost``,
-            ``return_best``, ``return_median``, ``return_worst``,
-            ``model_type``, ``sample_size``.
+            Keys: ``initiative_id``, ``confidence``, ``confidence_range``,
+            ``strategy``, ``report``.
 
         Raises
         ------
@@ -79,16 +79,20 @@ class Evaluate(PipelineComponent):
 
         scorer_event = load_scorer_event(manifest, job_dir, overrides=overrides or None)
 
+        confidence_range = reviewer.confidence_range
+
         # --- Only this block differs between strategies ---
         if strategy == "score":
-            score_result = score_confidence(scorer_event["initiative_id"], reviewer.confidence_range)
+            score_result = score_confidence(scorer_event["initiative_id"], confidence_range)
             _write_score_result(job_dir, score_result)
             confidence = score_result.confidence
+            report = f"Confidence drawn uniformly between {confidence_range[0]:.2f} and {confidence_range[1]:.2f}"
         elif strategy == "review":
             from impact_engine_evaluate.review.api import review
 
             review_result = review(job_dir, config=self._config)
             confidence = review_result.overall_score
+            report = review_result
             if confidence == 0.0 and not review_result.dimensions:
                 logger.warning(
                     "Review returned 0.0 with no dimensions for initiative=%s",
@@ -102,12 +106,9 @@ class Evaluate(PipelineComponent):
         result = EvaluateResult(
             initiative_id=scorer_event["initiative_id"],
             confidence=confidence,
-            cost=scorer_event["cost_to_scale"],
-            return_best=scorer_event["ci_upper"],
-            return_median=scorer_event["effect_estimate"],
-            return_worst=scorer_event["ci_lower"],
-            model_type=scorer_event["model_type"],
-            sample_size=scorer_event["sample_size"],
+            confidence_range=confidence_range,
+            strategy=strategy,
+            report=report,
         )
 
         _write_evaluate_result(job_dir, result)

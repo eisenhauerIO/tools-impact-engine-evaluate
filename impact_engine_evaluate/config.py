@@ -7,6 +7,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 
 @dataclass
 class BackendConfig:
@@ -14,19 +16,16 @@ class BackendConfig:
 
     Parameters
     ----------
-    type : str
-        Registered backend name (e.g. ``"anthropic"``, ``"openai"``).
     model : str
-        Model identifier.
+        Model identifier passed to ``litellm.completion()``.
     temperature : float
         Sampling temperature.
     max_tokens : int
         Maximum tokens per completion.
     extra : dict
-        Additional backend-specific kwargs.
+        Additional kwargs forwarded to ``litellm.completion()``.
     """
 
-    type: str = "anthropic"
     model: str = "claude-sonnet-4-5-20250929"
     temperature: float = 0.0
     max_tokens: int = 4096
@@ -71,11 +70,10 @@ def load_config(source: str | Path | dict[str, Any] | None = None) -> ReviewConf
     backend_raw = raw.get("backend", {})
 
     backend = BackendConfig(
-        type=os.environ.get("REVIEW_BACKEND_TYPE", backend_raw.get("type", "anthropic")),
         model=os.environ.get("REVIEW_BACKEND_MODEL", backend_raw.get("model", "claude-sonnet-4-5-20250929")),
         temperature=float(os.environ.get("REVIEW_BACKEND_TEMPERATURE", backend_raw.get("temperature", 0.0))),
         max_tokens=int(os.environ.get("REVIEW_BACKEND_MAX_TOKENS", backend_raw.get("max_tokens", 4096))),
-        extra={k: v for k, v in backend_raw.items() if k not in {"type", "model", "temperature", "max_tokens"}},
+        extra={k: v for k, v in backend_raw.items() if k not in {"model", "temperature", "max_tokens"}},
     )
 
     return ReviewConfig(backend=backend)
@@ -83,11 +81,5 @@ def load_config(source: str | Path | dict[str, Any] | None = None) -> ReviewConf
 
 def _load_yaml(path: Path) -> dict[str, Any]:
     """Load YAML file using PyYAML."""
-    try:
-        import yaml
-
-        with open(path, encoding="utf-8") as fh:
-            return yaml.safe_load(fh) or {}
-    except ImportError:
-        msg = "PyYAML is required to load YAML config files: pip install pyyaml"
-        raise ImportError(msg) from None
+    with open(path, encoding="utf-8") as fh:
+        return yaml.safe_load(fh) or {}

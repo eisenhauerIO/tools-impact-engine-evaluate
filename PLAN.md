@@ -5,7 +5,8 @@ self-contained deliverable. See DESIGN.md for architectural context.
 
 ## Current state
 
-The evaluate package is complete through Phase 2.5 (symmetric dispatch + naming):
+The evaluate package is complete through Phase 2.5 (symmetric dispatch + naming)
+with a backend simplification pass applied:
 
 - Symmetric `Evaluate` adapter: both strategies share setup, `EvaluateResult`
   construction, and job directory I/O. Manifest is read-only.
@@ -14,8 +15,8 @@ The evaluate package is complete through Phase 2.5 (symmetric dispatch + naming)
 - `MethodReviewer` base with default `load_artifact()` — subclasses override
   only when they need method-specific loading
 - `score_confidence()` pure function; `EvaluateResult` shared stage output
-- Review engine with `from_config()` and `review()`
-- Three LLM backends (Anthropic, OpenAI, LiteLLM) via registry
+- Review engine calls `litellm.completion()` directly with structured output
+- Jinja2 and PyYAML are required core dependencies (no fallback code)
 - Experiment (RCT) reviewer with prompt templates and knowledge base
 - Unified configuration with YAML + env var support
 - Sphinx documentation with guides, tutorials, and API reference
@@ -89,12 +90,15 @@ impact_engine_evaluate.review("job-impact-engine-XXXX/")
   └─ 7. Return ReviewResult
 ```
 
-### Extensibility dimensions
+### Extensibility dimension
 
 | Dimension | ABC | Registry | What it provides |
 |-----------|-----|----------|-----------------|
-| **Backend** | `Backend` | `BackendRegistry` | *How* to call an LLM |
 | **Method** | `MethodReviewer` | `MethodReviewerRegistry` | *What* to ask + how to read artifacts + domain knowledge |
+
+The LLM backend is LiteLLM (called directly via `litellm.completion()`).
+Any model supported by LiteLLM can be used by setting the `model` field
+in config.
 
 ### Manifest convention
 
@@ -280,7 +284,7 @@ results into a composite review.
 - Prompt chaining: study_design → data_quality → method-specific
 - Updated `review()` API to support multi-prompt mode
 
-## Phase 5 — Advanced backends and retrieval
+## Phase 5 — Advanced retrieval and production features
 
 **Status**: planned
 
@@ -290,6 +294,5 @@ results into a composite review.
 
 - Vector knowledge base (ChromaDB or similar)
 - Review caching by content hash
-- Structured output mode (JSON schema enforcement where backends support it)
-- Rate limiting and retry logic for backend calls
+- Rate limiting and retry logic for LiteLLM calls
 - Batch review mode for multiple job directories

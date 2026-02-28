@@ -104,7 +104,7 @@ manifest, dispatches on `evaluate_strategy`, and returns the common 8-key output
 ```python
 from impact_engine_evaluate import Evaluate
 
-evaluator = Evaluate(config={"backend": {"type": "anthropic"}})
+evaluator = Evaluate(config={"backend": {"model": "claude-sonnet-4-5-20250929"}})
 
 result = evaluator.execute({
     "job_dir": "path/to/job-impact-engine-XXXX/",

@@ -3,7 +3,7 @@
 import json
 import tempfile
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -12,41 +12,25 @@ from impact_engine_evaluate.adapter import (
     SCORE_RESULT_FILENAME,
     Evaluate,
 )
-from impact_engine_evaluate.review import engine as _engine_mod
+from impact_engine_evaluate.review.models import DimensionResponse, ReviewResponse
 
-SAMPLE_RESPONSE = """\
-DIMENSION: randomization_integrity
-SCORE: 0.85
-JUSTIFICATION: Good balance.
-
-DIMENSION: specification_adequacy
-SCORE: 0.80
-JUSTIFICATION: Appropriate specification.
-
-DIMENSION: statistical_inference
-SCORE: 0.75
-JUSTIFICATION: CIs reported.
-
-DIMENSION: threats_to_validity
-SCORE: 0.70
-JUSTIFICATION: Some attrition noted.
-
-DIMENSION: effect_size_plausibility
-SCORE: 0.90
-JUSTIFICATION: Realistic.
-
-OVERALL: 0.80
-"""
+SAMPLE_PARSED = ReviewResponse(
+    dimensions=[
+        DimensionResponse(name="randomization_integrity", score=0.85, justification="Good balance."),
+        DimensionResponse(name="specification_adequacy", score=0.80, justification="Appropriate specification."),
+        DimensionResponse(name="statistical_inference", score=0.75, justification="CIs reported."),
+        DimensionResponse(name="threats_to_validity", score=0.70, justification="Some attrition noted."),
+        DimensionResponse(name="effect_size_plausibility", score=0.90, justification="Realistic."),
+    ],
+    overall=0.80,
+)
 
 EXPECTED_KEYS = {
     "initiative_id",
     "confidence",
-    "cost",
-    "return_best",
-    "return_median",
-    "return_worst",
-    "model_type",
-    "sample_size",
+    "confidence_range",
+    "strategy",
+    "report",
 }
 
 
@@ -90,22 +74,15 @@ def test_score_is_deterministic(score_job_dir):
     assert r1 == r2
 
 
-def test_score_reads_returns(score_job_dir):
-    """Score strategy reads scenario returns from impact_results.json."""
+def test_score_strategy_and_report(score_job_dir):
+    """Score strategy populates strategy, confidence_range, and a descriptive report."""
     evaluator = Evaluate()
     result = evaluator.execute({"job_dir": score_job_dir})
-    assert result["return_best"] == 15.0
-    assert result["return_median"] == 10.0
-    assert result["return_worst"] == 5.0
-    assert result["cost"] == 100.0
-    assert result["sample_size"] == 50
-
-
-def test_cost_override(score_job_dir):
-    """Cost override in the event takes precedence over impact_results.json."""
-    evaluator = Evaluate()
-    result = evaluator.execute({"job_dir": score_job_dir, "cost_to_scale": 999.0})
-    assert result["cost"] == 999.0
+    assert result["strategy"] == "score"
+    assert result["confidence_range"] == (0.85, 1.0)
+    assert isinstance(result["report"], str)
+    assert "0.85" in result["report"]
+    assert "1.00" in result["report"]
 
 
 def test_score_writes_evaluate_result(score_job_dir):
@@ -128,38 +105,54 @@ def test_score_writes_score_result(score_job_dir):
 # -- Review strategy ----------------------------------------------------------
 
 
-@patch.object(_engine_mod, "BackendRegistry")
-def test_review_returns_correct_keys(mock_registry_cls, review_job_dir):
-    """Review strategy returns all expected output keys."""
-    mock_backend = mock_registry_cls.create.return_value
-    mock_backend.name = "mock"
-    mock_backend.complete.return_value = SAMPLE_RESPONSE
+def _mock_litellm_completion():
+    return MagicMock(
+        choices=[MagicMock(message=MagicMock(parsed=SAMPLE_PARSED, content=SAMPLE_PARSED.model_dump_json()))]
+    )
 
-    evaluator = Evaluate(config={"backend": {"type": "mock", "model": "mock-model"}})
+
+@patch("impact_engine_evaluate.review.engine.litellm")
+def test_review_returns_correct_keys(mock_litellm, review_job_dir):
+    """Review strategy returns all expected output keys."""
+    mock_litellm.completion.return_value = _mock_litellm_completion()
+
+    evaluator = Evaluate(config={"backend": {"model": "mock-model"}})
     result = evaluator.execute({"job_dir": review_job_dir})
     assert set(result.keys()) == EXPECTED_KEYS
 
 
-@patch.object(_engine_mod, "BackendRegistry")
-def test_review_uses_llm_confidence(mock_registry_cls, review_job_dir):
+@patch("impact_engine_evaluate.review.engine.litellm")
+def test_review_uses_llm_confidence(mock_litellm, review_job_dir):
     """Review strategy uses the LLM overall_score as confidence."""
-    mock_backend = mock_registry_cls.create.return_value
-    mock_backend.name = "mock"
-    mock_backend.complete.return_value = SAMPLE_RESPONSE
+    mock_litellm.completion.return_value = _mock_litellm_completion()
 
-    evaluator = Evaluate(config={"backend": {"type": "mock"}})
+    evaluator = Evaluate(config={"backend": {"model": "mock-model"}})
     result = evaluator.execute({"job_dir": review_job_dir})
     assert result["confidence"] == 0.80
 
 
-@patch.object(_engine_mod, "BackendRegistry")
-def test_review_writes_evaluate_result(mock_registry_cls, review_job_dir):
-    """Review strategy writes evaluate_result.json without touching manifest."""
-    mock_backend = mock_registry_cls.create.return_value
-    mock_backend.name = "mock"
-    mock_backend.complete.return_value = SAMPLE_RESPONSE
+@patch("impact_engine_evaluate.review.engine.litellm")
+def test_review_strategy_and_report(mock_litellm, review_job_dir):
+    """Review strategy populates strategy, confidence_range, and a full report."""
+    mock_litellm.completion.return_value = _mock_litellm_completion()
 
-    Evaluate(config={"backend": {"type": "mock"}}).execute({"job_dir": review_job_dir})
+    evaluator = Evaluate(config={"backend": {"model": "mock-model"}})
+    result = evaluator.execute({"job_dir": review_job_dir})
+    assert result["strategy"] == "review"
+    assert result["confidence_range"] == (0.85, 1.0)
+    report = result["report"]
+    assert isinstance(report, dict)
+    assert "dimensions" in report
+    assert "overall_score" in report
+    assert "raw_response" in report
+
+
+@patch("impact_engine_evaluate.review.engine.litellm")
+def test_review_writes_evaluate_result(mock_litellm, review_job_dir):
+    """Review strategy writes evaluate_result.json without touching manifest."""
+    mock_litellm.completion.return_value = _mock_litellm_completion()
+
+    Evaluate(config={"backend": {"model": "mock-model"}}).execute({"job_dir": review_job_dir})
     _assert_evaluate_result_written(review_job_dir)
 
 

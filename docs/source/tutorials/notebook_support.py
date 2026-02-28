@@ -10,11 +10,15 @@ def print_json(data, indent=2):
 
 def print_result_summary(result):
     """Print a compact summary of an EvaluateResult dict."""
+    lo, hi = result["confidence_range"]
     print(f"Initiative:  {result['initiative_id']}")
-    print(f"Model type:  {result['model_type']}")
-    print(f"Confidence:  {result['confidence']:.4f}")
-    print(f"Cost:        {result['cost']:.2f}")
-    print(f"Return best: {result['return_best']:.2f}")
-    print(f"Return med:  {result['return_median']:.2f}")
-    print(f"Return worst:{result['return_worst']:.2f}")
-    print(f"Sample size: {result['sample_size']}")
+    print(f"Strategy:    {result['strategy']}")
+    print(f"Confidence:  {result['confidence']:.4f}  (range {lo:.2f}–{hi:.2f})")
+    report = result["report"]
+    if isinstance(report, str):
+        print(f"Report:      {report}")
+    else:
+        print(
+            f"Report:      {report.get('overall_score', 'N/A')} overall"
+            f" ({len(report.get('dimensions', []))} dimensions)"
+        )
