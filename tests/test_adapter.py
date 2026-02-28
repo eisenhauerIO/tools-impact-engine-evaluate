@@ -7,12 +7,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from impact_engine_evaluate.review import engine as _engine_mod
 from impact_engine_evaluate.adapter import (
     EVALUATE_RESULT_FILENAME,
     SCORE_RESULT_FILENAME,
     Evaluate,
 )
+from impact_engine_evaluate.review import engine as _engine_mod
 from impact_engine_evaluate.review.models import DimensionResponse, ReviewResponse
 
 SAMPLE_PARSED = ReviewResponse(
