@@ -5,7 +5,7 @@ self-contained deliverable. See DESIGN.md for architectural context.
 
 ## Current state
 
-The evaluate package is complete through Phase 1.5 (74 tests passing):
+The evaluate package is complete through Phase 2 (documentation):
 
 - Unified `Evaluate` adapter with deterministic and agentic strategy dispatch
 - `MethodReviewer` registry as single source of truth for model types
@@ -13,6 +13,7 @@ The evaluate package is complete through Phase 1.5 (74 tests passing):
 - Three LLM backends (Anthropic, OpenAI, LiteLLM) via registry
 - Experiment (RCT) reviewer with prompt templates and knowledge base
 - Unified configuration with YAML + env var support
+- Sphinx documentation with guides, tutorials, and API reference
 
 ## Phase 0 — Design docs
 
@@ -229,7 +230,32 @@ manifest, and returns a common output contract.
 - **Agentic path**: confidence is the LLM-derived `overall_score` from
   `ReviewResult` (non-deterministic, content-aware).
 
-## Phase 2 — Additional method reviewers
+## Phase 2 — Documentation and tutorials
+
+**Status**: complete
+
+**Goal**: Document the existing features with Sphinx guides, tutorial notebooks,
+and an auto-generated API reference. Follow conventions established by the
+measure and allocate packages.
+
+**Deliverables**:
+
+| File | Role |
+|------|------|
+| `docs/source/GUIDELINES.md` | Documentation standards (page purposes, writing style, formatting) |
+| `docs/source/index.md` | Root toctree with Guides and Tutorials sections |
+| `docs/source/guides/usage.md` | Workflow guide for both evaluation paths |
+| `docs/source/guides/configuration.md` | Backend parameter reference tables |
+| `docs/source/guides/design.md` | Architecture, registry patterns, data flow |
+| `docs/source/guides/api_reference.rst` | Auto-generated API docs from docstrings |
+| `docs/source/tutorials/demo_deterministic_scoring.ipynb` | Executable tutorial for deterministic scoring |
+| `docs/source/tutorials/demo_agentic_review.ipynb` | Non-executable tutorial for LLM review |
+| `docs/source/tutorials/notebook_support.py` | Shared notebook utilities |
+| `README.md` | Expanded with installation, quick start, and development sections |
+
+## Phase 3 — Additional method reviewers
+
+**Status**: planned
 
 **Goal**: Register method reviewers for the remaining implemented model types,
 each with methodology-specific prompt templates and knowledge base content.
@@ -244,7 +270,9 @@ each with methodology-specific prompt templates and knowledge base content.
   - Metrics approximation (appropriateness, response function validation)
 - Each follows the self-contained package pattern established in Phase 1
 
-## Phase 3 — Multi-prompt review orchestration
+## Phase 4 — Multi-prompt review orchestration
+
+**Status**: planned
 
 **Goal**: Run multiple review prompts in sequence or parallel and aggregate
 results into a composite review.
@@ -256,7 +284,9 @@ results into a composite review.
 - Prompt chaining: study_design → data_quality → method-specific
 - Updated `review()` API to support multi-prompt mode
 
-## Phase 4 — Advanced backends and retrieval
+## Phase 5 — Advanced backends and retrieval
+
+**Status**: planned
 
 **Goal**: Production-grade features.
 

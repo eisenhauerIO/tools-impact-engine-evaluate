@@ -22,11 +22,18 @@ extensions = [
 ]
 
 # -- nbsphinx configuration --------------------------------------------------
-nbsphinx_execute = "always"
+nbsphinx_execute = "auto"
 nbsphinx_allow_errors = False
+nbsphinx_prolog = """
+{% set basename = env.docname.split("/")[-1] + ".ipynb" %}
+
+.. only:: html
+
+    :download:`Download this notebook <{{ basename }}>`
+"""
 
 templates_path = ["_templates"]
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "GUIDELINES.md"]
 
 # -- Options for HTML output ------------------------------------------------
 html_theme = "sphinx_rtd_theme"
