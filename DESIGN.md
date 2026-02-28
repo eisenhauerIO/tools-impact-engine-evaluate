@@ -8,16 +8,15 @@ intervals, model diagnostics — require expert judgement to interpret. Is the
 effect estimate plausible? Is the model type appropriate for the data? Are the
 diagnostics healthy?
 
-The deterministic confidence scorer (`scorer.py`) assigns a confidence band
-based on methodology type alone. It cannot reason about the *content* of the
-results. The agentic review layer adds LLM-powered evaluation of the actual
-measurement artifacts, producing structured, auditable review judgements.
-
-Together, the two layers form a complete EVALUATE stage:
+The agentic review layer adds LLM-powered evaluation of the actual measurement
+artifacts, producing structured, auditable review judgements. A lightweight
+deterministic scorer (`scorer.py`) is included for debugging, testing, and
+illustration — it assigns a confidence band based on methodology type alone
+without examining the content of the results.
 
 ```
-MeasureResult ──► Deterministic Scorer ──► confidence score (0–1)
-             └──► Agentic Reviewer    ──► per-dimension scores + justifications
+MeasureResult ──► Agentic Reviewer      ──► per-dimension scores + justifications
+             └──► Deterministic Scorer  ──► confidence score (0–1)  [debug/test]
 ```
 
 ## Architecture overview
@@ -67,7 +66,7 @@ the registry keys (strings) are the canonical model type identifiers.
 
 | File | Role |
 |------|------|
-| `scorer.py` | Pure function `score_initiative(event, confidence_range)` — draws a deterministic score seeded by `initiative_id` within the given range |
+| `scorer.py` | Pure function `score_initiative(event, confidence_range)` — deterministic score for debugging, testing, and illustration; seeded by `initiative_id` |
 | `job_reader.py` | `load_scorer_event(manifest, job_dir)` — reads `impact_results.json` and builds a flat scorer event dict |
 | `adapter.py` | `Evaluate` PipelineComponent — reads manifest, dispatches on `evaluate_strategy`, returns common output |
 
@@ -121,7 +120,7 @@ the evaluation approach. Both deterministic and agentic paths read scenario
 returns from `impact_results.json` via `load_scorer_event()`.
 
 The `evaluate_strategy` field in `manifest.json`:
-- `"deterministic"` — uses `reviewer.confidence_range` for fast scoring
+- `"deterministic"` — lightweight scorer for debugging and testing
 - `"agentic"` — runs the full LLM review pipeline (default)
 
 ### Scorer event contract

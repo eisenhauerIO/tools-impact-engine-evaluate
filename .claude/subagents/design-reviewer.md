@@ -1,1 +1,1 @@
-../.cache/utils-agentic-support/claude/subagents/design-reviewer.md
+../.cache/utils-agentic-support/claude/subagents/code/design-reviewer.md

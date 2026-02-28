@@ -2,8 +2,10 @@
 
 ## Project overview
 
-Confidence scoring for the impact engine pipeline. Implements deterministic
-confidence scoring by model type, wrapped as a `PipelineComponent` for the orchestrator.
+Agentic review and confidence scoring for the impact engine pipeline. Implements
+LLM-powered methodology review and a lightweight deterministic scorer (for
+debugging, testing, and illustration), wrapped as a `PipelineComponent` for
+the orchestrator.
 
 ## Development setup
 
@@ -19,9 +21,17 @@ pip install -e ".[dev]"
 
 ## Architecture
 
-- `impact_engine_evaluate/scorer.py` — core scoring logic (pure functions, no orchestrator dependency)
-- `impact_engine_evaluate/adapter.py` — orchestrator integration (`Evaluate`)
-- `impact_engine_evaluate/tests/` — unit tests
+- `impact_engine_evaluate/scorer.py` — deterministic scoring for debugging/testing/illustration (pure functions, no orchestrator dependency)
+- `impact_engine_evaluate/job_reader.py` — reads job directory artifacts into scorer event dicts
+- `impact_engine_evaluate/adapter.py` — orchestrator integration (`Evaluate`), strategy dispatch
+- `impact_engine_evaluate/config.py` — review configuration (YAML/dict/env vars)
+- `impact_engine_evaluate/review/engine.py` — `ReviewEngine` orchestrates a single LLM review
+- `impact_engine_evaluate/review/api.py` — public `review(job_dir)` entry point
+- `impact_engine_evaluate/review/manifest.py` — `Manifest` dataclass, load/update helpers
+- `impact_engine_evaluate/review/models.py` — data models (`ReviewResult`, `ArtifactPayload`, etc.)
+- `impact_engine_evaluate/review/backends/` — LLM backend registry (Anthropic, OpenAI, LiteLLM)
+- `impact_engine_evaluate/review/methods/` — method reviewer registry (experiment exemplar)
+- `tests/` — unit tests
 
 ## Verification
 

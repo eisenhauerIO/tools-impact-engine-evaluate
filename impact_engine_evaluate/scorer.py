@@ -1,4 +1,4 @@
-"""Pure evaluation logic: deterministic confidence scoring."""
+"""Deterministic confidence scoring for debugging, testing, and illustration."""
 
 import hashlib
 import random

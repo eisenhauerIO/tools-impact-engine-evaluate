@@ -3,8 +3,9 @@
 ## Overview
 
 Configuration controls the LLM backend used by the agentic review path. The
-deterministic scoring path requires no configuration. Settings can be provided
-as a YAML file, a Python dict, or environment variables.
+deterministic scoring path (used for debugging, testing, and illustration)
+requires no configuration. Settings can be provided as a YAML file, a Python
+dict, or environment variables.
 
 ---
 

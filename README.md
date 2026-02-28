@@ -10,6 +10,6 @@
 
 How much you trust a causal estimate depends on the method that produced it. A randomized experiment with thousands of observations produces stronger evidence than a time series model on sparse data — but most pipelines treat all estimates equally.
 
-**Impact Engine — Evaluate** scores each estimate for reliability based on its measurement design. A deterministic scorer assigns confidence from methodology-specific ranges. An agentic reviewer sends the actual measurement artifacts to an LLM for structured, per-dimension evaluation. The resulting confidence score directly penalizes return estimates downstream, making the allocator conservative where evidence is weak and aggressive where evidence is strong.
+**Impact Engine — Evaluate** scores each estimate for reliability based on its measurement design. An agentic reviewer sends the actual measurement artifacts to an LLM for structured, per-dimension evaluation. A lightweight deterministic scorer is included for debugging, testing, and illustration. The resulting confidence score directly penalizes return estimates downstream, making the allocator conservative where evidence is weak and aggressive where evidence is strong.
 
 Visit our [documentation](https://eisenhauerio.github.io/tools-impact-engine-evaluate/) for details.

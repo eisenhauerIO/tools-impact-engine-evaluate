@@ -7,16 +7,15 @@ stage. These results require expert judgement to interpret. Is the effect
 estimate plausible? Is the model type appropriate for the data? Are the
 diagnostics healthy?
 
-The deterministic confidence scorer assigns a confidence band based on
-methodology type alone. It cannot reason about the content of the results. The
-agentic review layer adds LLM-powered evaluation of the actual measurement
-artifacts, producing structured, auditable review judgements.
-
-Together, the two layers form a complete evaluate stage:
+The agentic review layer adds LLM-powered evaluation of the actual measurement
+artifacts, producing structured, auditable review judgements. A lightweight
+deterministic scorer is included for debugging, testing, and illustration — it
+assigns a confidence band based on methodology type alone without examining the
+content of the results.
 
 ```
-MeasureResult ──► Deterministic Scorer ──► confidence score (0–1)
-             └──► Agentic Reviewer    ──► per-dimension scores + justifications
+MeasureResult ──► Agentic Reviewer      ──► per-dimension scores + justifications
+             └──► Deterministic Scorer  ──► confidence score (0–1)  [debug/test]
 ```
 
 ---
@@ -69,7 +68,7 @@ agentic path).
 
 | File | Role |
 |------|------|
-| `scorer.py` | Pure function `score_initiative()` — draws a deterministic score seeded by `initiative_id` |
+| `scorer.py` | Pure function `score_initiative()` — deterministic score for debugging, testing, and illustration |
 | `job_reader.py` | `load_scorer_event()` — reads `impact_results.json` and builds a flat scorer event dict |
 | `adapter.py` | `Evaluate` PipelineComponent — reads manifest, dispatches on strategy, returns common output |
 

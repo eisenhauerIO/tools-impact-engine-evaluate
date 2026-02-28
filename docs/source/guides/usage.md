@@ -6,19 +6,22 @@ Impact Engine Evaluate scores causal effect estimates for reliability. It reads
 a job directory produced by the measure stage and assigns a confidence score
 that penalizes downstream return estimates in the allocator.
 
-The package provides two evaluation strategies. **Deterministic scoring** draws
-a reproducible confidence score from a methodology-specific range. **Agentic
-review** sends the measurement artifacts to an LLM for structured,
-per-dimension evaluation. Both strategies return the same 8-key output dict,
-making them interchangeable from the allocator's perspective.
+The package provides two evaluation strategies. **Agentic review** sends the
+measurement artifacts to an LLM for structured, per-dimension evaluation.
+**Deterministic scoring** is a lightweight alternative for debugging, testing,
+and illustration — it draws a reproducible confidence score from a
+methodology-specific range without calling an LLM. Both strategies return the
+same 8-key output dict, making them interchangeable from the allocator's
+perspective.
 
 ---
 
-## Deterministic scoring
+## Deterministic scoring (debug / test)
 
-The deterministic path requires no external dependencies. It assigns confidence
-based on the measurement methodology alone, without examining the content of
-the results.
+The deterministic path is useful for debugging, testing, and illustrating the
+pipeline without an LLM. It requires no external dependencies and assigns
+confidence based on the measurement methodology alone, without examining the
+content of the results.
 
 ```python
 from impact_engine_evaluate import score_initiative
@@ -113,8 +116,8 @@ The `evaluate_strategy` field in `manifest.json` controls the path:
 
 | Strategy | Behavior |
 |----------|----------|
-| `"deterministic"` | Uses the reviewer's `confidence_range` for fast scoring |
 | `"agentic"` | Runs the full LLM review pipeline (default) |
+| `"deterministic"` | Lightweight scorer for debugging and testing |
 
 Both strategies produce the same 8-key output dict, so the downstream allocator
 does not need to know which path was used. When the agentic path runs, the
