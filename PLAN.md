@@ -251,7 +251,7 @@ measure and allocate packages.
 | `docs/source/tutorials/demo_deterministic_scoring.ipynb` | Executable tutorial for deterministic scoring |
 | `docs/source/tutorials/demo_agentic_review.ipynb` | Non-executable tutorial for LLM review |
 | `docs/source/tutorials/notebook_support.py` | Shared notebook utilities |
-| `README.md` | Expanded with installation, quick start, and development sections |
+| `README.md` | Expanded solution paragraph aligned with ecosystem template |
 
 ## Phase 3 — Additional method reviewers
 
