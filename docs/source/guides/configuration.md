@@ -11,35 +11,48 @@ dict, or environment variables.
 
 ## YAML configuration
 
+Create a config file and pass the path to `evaluate_confidence()` or `Evaluate()`:
+
+```python
+from impact_engine_evaluate import evaluate_confidence
+
+result = evaluate_confidence("review_config.yaml", "path/to/job-dir/")
+```
+
+**Anthropic:**
+
 ```yaml
 backend:
-  model: claude-sonnet-4-5-20250929
+  model: claude-sonnet-4-6
   temperature: 0.0
   max_tokens: 4096
 ```
 
-Pass the file path to `review()` or `Evaluate()`:
+**Ollama (local):**
 
-```python
-from impact_engine_evaluate import review
-
-result = review("path/to/job-dir/", config="review_config.yaml")
+```yaml
+backend:
+  model: ollama_chat/llama3.2   # routes to http://localhost:11434
+  temperature: 0.0
+  max_tokens: 2048
+  # api_base: "http://my-ollama-server:11434"  # custom endpoint
 ```
+
+The `ollama_chat/<model>` prefix is routed to `http://localhost:11434` by
+litellm automatically. Any extra keys (e.g. `api_base`) are forwarded as
+kwargs to `litellm.completion()`.
 
 ---
 
 ## Dict configuration
 
 ```python
-from impact_engine_evaluate import Evaluate
+from impact_engine_evaluate import evaluate_confidence
 
-evaluator = Evaluate(config={
-    "backend": {
-        "model": "gpt-4o",
-        "temperature": 0.0,
-        "max_tokens": 4096,
-    }
-})
+result = evaluate_confidence(
+    {"backend": {"model": "gpt-4o", "temperature": 0.0, "max_tokens": 4096}},
+    "path/to/job-dir/",
+)
 ```
 
 ---

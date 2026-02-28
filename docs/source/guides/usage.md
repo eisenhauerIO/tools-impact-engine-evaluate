@@ -70,12 +70,12 @@ structured review with per-dimension scores and justifications. It requires an
 LLM backend SDK and an API key.
 
 ```python
-from impact_engine_evaluate import review
+from impact_engine_evaluate import evaluate_confidence
 
-result = review("path/to/job-impact-engine-XXXX/")
+result = evaluate_confidence("review_config.yaml", "path/to/job-impact-engine-XXXX/")
 ```
 
-`review()` performs the following steps:
+`evaluate_confidence()` performs the following steps:
 
 1. **Read manifest.** Loads `manifest.json` from the job directory to determine
    the `model_type` and locate artifact files.
@@ -98,13 +98,13 @@ for backend setup.
 ## Orchestrator integration
 
 Within the full pipeline, the orchestrator calls `Evaluate.execute()` rather
-than invoking `score_initiative()` or `review()` directly. The adapter reads the
-manifest, dispatches on `evaluate_strategy`, and returns the common 8-key output.
+than invoking `evaluate_confidence()` directly. The adapter reads the
+manifest, dispatches on `evaluate_strategy`, and returns the common output dict.
 
 ```python
 from impact_engine_evaluate import Evaluate
 
-evaluator = Evaluate(config={"backend": {"model": "claude-sonnet-4-5-20250929"}})
+evaluator = Evaluate(config="review_config.yaml")
 
 result = evaluator.execute({
     "job_dir": "path/to/job-impact-engine-XXXX/",
@@ -115,11 +115,11 @@ The `evaluate_strategy` field in `manifest.json` controls the path:
 
 | Strategy | Behavior |
 |----------|----------|
-| `"agentic"` | Runs the full LLM review pipeline (default) |
-| `"deterministic"` | Lightweight scorer for debugging and testing |
+| `"review"` | Runs the full LLM review pipeline |
+| `"score"` | Lightweight deterministic scorer for debugging and testing |
 
-Both strategies produce the same 8-key output dict, so the downstream allocator
-does not need to know which path was used. When the agentic path runs, the
+Both strategies produce the same output dict, so the downstream allocator
+does not need to know which path was used. When the review path runs, the
 `confidence` value is the LLM-derived `overall_score` from the review rather
 than a draw from the confidence range.
 

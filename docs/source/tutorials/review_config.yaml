@@ -1,0 +1,19 @@
+# review_config.yaml — backend configuration for the evaluate review path
+#
+# Pass this file to evaluate_confidence():
+#
+#   result = evaluate_confidence("review_config.yaml", "path/to/job-dir/")
+#
+# All extra keys under `backend` are forwarded as kwargs to litellm.completion().
+
+backend:
+  # Model identifier passed to litellm.completion().
+  # Ollama:    "ollama_chat/<model>"  →  routes to http://localhost:11434
+  # Anthropic: "claude-sonnet-4-6"
+  # OpenAI:    "gpt-4o"
+  model: "ollama_chat/llama3.2"
+  temperature: 0.0
+  max_tokens: 2048
+
+  # Uncomment to override the Ollama endpoint (default: http://localhost:11434):
+  # api_base: "http://my-ollama-server:11434"

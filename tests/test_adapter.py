@@ -1,16 +1,17 @@
-"""Tests for the Evaluate pipeline component."""
+"""Tests for evaluate_confidence (package-level entry point)."""
 
 import json
 import tempfile
+from dataclasses import asdict
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from impact_engine_evaluate.adapter import (
+from impact_engine_evaluate.api import (
     EVALUATE_RESULT_FILENAME,
     SCORE_RESULT_FILENAME,
-    Evaluate,
+    evaluate_confidence,
 )
 from impact_engine_evaluate.review import engine as _engine_mod
 from impact_engine_evaluate.review.models import DimensionResponse, ReviewResponse
@@ -35,6 +36,11 @@ EXPECTED_KEYS = {
 }
 
 
+def _run(job_dir, config=None, **kwargs):
+    """Call evaluate_confidence and return the result as a dict."""
+    return asdict(evaluate_confidence(config=config, job_dir=job_dir, **kwargs))
+
+
 # -- Shared assertions -------------------------------------------------------
 
 
@@ -55,30 +61,26 @@ def _assert_evaluate_result_written(job_dir):
 
 def test_score_returns_correct_keys(score_job_dir):
     """Score strategy returns all expected EvaluateResult keys."""
-    evaluator = Evaluate()
-    result = evaluator.execute({"job_dir": score_job_dir})
+    result = _run(score_job_dir)
     assert set(result.keys()) == EXPECTED_KEYS
 
 
 def test_score_confidence_in_range(score_job_dir):
     """Score strategy produces confidence within the experiment range."""
-    evaluator = Evaluate()
-    result = evaluator.execute({"job_dir": score_job_dir})
+    result = _run(score_job_dir)
     assert 0.85 <= result["confidence"] <= 1.0
 
 
 def test_score_is_deterministic(score_job_dir):
     """Repeated score calls produce identical results."""
-    evaluator = Evaluate()
-    r1 = evaluator.execute({"job_dir": score_job_dir})
-    r2 = evaluator.execute({"job_dir": score_job_dir})
+    r1 = _run(score_job_dir)
+    r2 = _run(score_job_dir)
     assert r1 == r2
 
 
 def test_score_strategy_and_report(score_job_dir):
     """Score strategy populates strategy, confidence_range, and a descriptive report."""
-    evaluator = Evaluate()
-    result = evaluator.execute({"job_dir": score_job_dir})
+    result = _run(score_job_dir)
     assert result["strategy"] == "score"
     assert result["confidence_range"] == (0.85, 1.0)
     assert isinstance(result["report"], str)
@@ -88,13 +90,13 @@ def test_score_strategy_and_report(score_job_dir):
 
 def test_score_writes_evaluate_result(score_job_dir):
     """Score strategy writes evaluate_result.json without touching manifest."""
-    Evaluate().execute({"job_dir": score_job_dir})
+    _run(score_job_dir)
     _assert_evaluate_result_written(score_job_dir)
 
 
 def test_score_writes_score_result(score_job_dir):
     """Score strategy writes score_result.json to the job directory."""
-    Evaluate().execute({"job_dir": score_job_dir})
+    _run(score_job_dir)
     result_path = Path(score_job_dir) / SCORE_RESULT_FILENAME
     assert result_path.exists(), "score_result.json not written"
     written = json.loads(result_path.read_text())
@@ -117,8 +119,7 @@ def test_review_returns_correct_keys(mock_litellm, review_job_dir):
     """Review strategy returns all expected output keys."""
     mock_litellm.completion.return_value = _mock_litellm_completion()
 
-    evaluator = Evaluate(config={"backend": {"model": "mock-model"}})
-    result = evaluator.execute({"job_dir": review_job_dir})
+    result = _run(review_job_dir, config={"backend": {"model": "mock-model"}})
     assert set(result.keys()) == EXPECTED_KEYS
 
 
@@ -127,8 +128,7 @@ def test_review_uses_llm_confidence(mock_litellm, review_job_dir):
     """Review strategy uses the LLM overall_score as confidence."""
     mock_litellm.completion.return_value = _mock_litellm_completion()
 
-    evaluator = Evaluate(config={"backend": {"model": "mock-model"}})
-    result = evaluator.execute({"job_dir": review_job_dir})
+    result = _run(review_job_dir, config={"backend": {"model": "mock-model"}})
     assert result["confidence"] == 0.80
 
 
@@ -137,8 +137,7 @@ def test_review_strategy_and_report(mock_litellm, review_job_dir):
     """Review strategy populates strategy, confidence_range, and a full report."""
     mock_litellm.completion.return_value = _mock_litellm_completion()
 
-    evaluator = Evaluate(config={"backend": {"model": "mock-model"}})
-    result = evaluator.execute({"job_dir": review_job_dir})
+    result = _run(review_job_dir, config={"backend": {"model": "mock-model"}})
     assert result["strategy"] == "review"
     assert result["confidence_range"] == (0.85, 1.0)
     report = result["report"]
@@ -153,7 +152,7 @@ def test_review_writes_evaluate_result(mock_litellm, review_job_dir):
     """Review strategy writes evaluate_result.json without touching manifest."""
     mock_litellm.completion.return_value = _mock_litellm_completion()
 
-    Evaluate(config={"backend": {"model": "mock-model"}}).execute({"job_dir": review_job_dir})
+    _run(review_job_dir, config={"backend": {"model": "mock-model"}})
     _assert_evaluate_result_written(review_job_dir)
 
 
@@ -174,9 +173,8 @@ def test_unknown_strategy_raises():
     Path(tmpdir, "manifest.json").write_text(json.dumps(manifest))
     Path(tmpdir, "impact_results.json").write_text(json.dumps(results))
 
-    evaluator = Evaluate()
     with pytest.raises(ValueError, match="Unknown evaluate_strategy"):
-        evaluator.execute({"job_dir": tmpdir})
+        evaluate_confidence(config=None, job_dir=tmpdir)
 
 
 def test_default_strategy_is_review():
