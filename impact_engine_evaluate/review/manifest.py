@@ -35,8 +35,6 @@ class Manifest:
 
     Parameters
     ----------
-    schema_version : str
-        Manifest schema version.
     model_type : str
         Causal inference methodology label.
     created_at : str
@@ -50,7 +48,6 @@ class Manifest:
         ``"score"`` (deterministic confidence). Defaults to ``"review"``.
     """
 
-    schema_version: str
     model_type: str
     created_at: str = ""
     files: dict[str, FileEntry] = field(default_factory=dict)
@@ -88,10 +85,9 @@ def load_manifest(job_dir: str | Path) -> Manifest:
         data: dict[str, Any] = json.load(fh)
 
     # Validate required fields
-    for key in ("schema_version", "model_type"):
-        if key not in data:
-            msg = f"Manifest missing required field: {key!r}"
-            raise ValueError(msg)
+    if "model_type" not in data:
+        msg = "Manifest missing required field: 'model_type'"
+        raise ValueError(msg)
 
     files: dict[str, FileEntry] = {}
     for name, entry in data.get("files", {}).items():
@@ -102,7 +98,6 @@ def load_manifest(job_dir: str | Path) -> Manifest:
     logger.debug("Loaded manifest from %s: model_type=%s", manifest_path, data["model_type"])
 
     return Manifest(
-        schema_version=data["schema_version"],
         model_type=data["model_type"],
         created_at=data.get("created_at", ""),
         files=files,

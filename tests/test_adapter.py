@@ -164,7 +164,6 @@ def test_unknown_strategy_raises():
     """Unknown evaluate_strategy raises ValueError."""
     tmpdir = tempfile.mkdtemp(prefix="job-unknown-test-")
     manifest = {
-        "schema_version": "2.0",
         "model_type": "experiment",
         "evaluate_strategy": "unknown_xyz",
         "files": {
@@ -184,7 +183,6 @@ def test_default_strategy_is_review():
     """Manifest without evaluate_strategy defaults to review."""
     tmpdir = tempfile.mkdtemp(prefix="job-default-test-")
     manifest = {
-        "schema_version": "2.0",
         "model_type": "experiment",
         "files": {
             "impact_results": {"path": "impact_results.json", "format": "json"},

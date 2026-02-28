@@ -26,7 +26,6 @@ SAMPLE_PARSED = ReviewResponse(
 def _make_job_dir():
     tmpdir = tempfile.mkdtemp(prefix="job-impact-engine-test-")
     manifest = {
-        "schema_version": "2.0",
         "model_type": "experiment",
         "created_at": "2025-06-01T12:00:00+00:00",
         "files": {
@@ -110,7 +109,6 @@ def test_review_missing_manifest():
 def test_review_unknown_method():
     with tempfile.TemporaryDirectory() as tmpdir:
         manifest = {
-            "schema_version": "2.0",
             "model_type": "unknown_method_xyz",
             "files": {},
         }

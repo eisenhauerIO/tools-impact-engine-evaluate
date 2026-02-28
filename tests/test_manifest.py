@@ -9,7 +9,6 @@ import pytest
 from impact_engine_evaluate.review.manifest import FileEntry, Manifest, load_manifest
 
 SAMPLE_MANIFEST = {
-    "schema_version": "2.0",
     "model_type": "experiment",
     "created_at": "2025-06-01T12:00:00+00:00",
     "files": {
@@ -30,7 +29,6 @@ def test_load_manifest():
         _write_manifest(tmpdir, SAMPLE_MANIFEST)
         manifest = load_manifest(tmpdir)
 
-        assert manifest.schema_version == "2.0"
         assert manifest.model_type == "experiment"
         assert manifest.created_at == "2025-06-01T12:00:00+00:00"
         assert "impact_results" in manifest.files
@@ -61,7 +59,7 @@ def test_load_manifest_missing_file():
 
 def test_load_manifest_missing_required_field():
     with tempfile.TemporaryDirectory() as tmpdir:
-        _write_manifest(tmpdir, {"schema_version": "2.0"})
+        _write_manifest(tmpdir, {"created_at": "2025-01-01T00:00:00+00:00"})
         with pytest.raises(ValueError, match="model_type"):
             load_manifest(tmpdir)
 
@@ -73,7 +71,7 @@ def test_file_entry_fields():
 
 
 def test_manifest_defaults():
-    manifest = Manifest(schema_version="2.0", model_type="experiment")
+    manifest = Manifest(model_type="experiment")
     assert manifest.created_at == ""
     assert manifest.files == {}
     assert manifest.initiative_id == ""

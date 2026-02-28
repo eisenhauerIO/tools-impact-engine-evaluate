@@ -34,7 +34,6 @@ def sample_job_dir():
 @pytest.fixture()
 def sample_manifest():
     return Manifest(
-        schema_version="2.0",
         model_type="experiment",
         files={
             "impact_results": FileEntry(path="impact_results.json", format="json"),
@@ -51,7 +50,6 @@ def test_load_artifact(experiment_reviewer, sample_job_dir, sample_manifest):
 
 def test_load_artifact_initiative_from_manifest(experiment_reviewer, sample_job_dir):
     manifest = Manifest(
-        schema_version="2.0",
         model_type="experiment",
         initiative_id="init-explicit",
         files={
@@ -68,7 +66,7 @@ def test_load_artifact_initiative_from_dir_name(experiment_reviewer, sample_job_
 
 
 def test_load_artifact_empty_manifest_raises(experiment_reviewer):
-    manifest = Manifest(schema_version="2.0", model_type="experiment", files={})
+    manifest = Manifest(model_type="experiment", files={})
     with pytest.raises(ValueError, match="no file entries"):
         experiment_reviewer.load_artifact(manifest, Path("/tmp"))
 

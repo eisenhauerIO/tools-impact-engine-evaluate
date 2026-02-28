@@ -23,7 +23,6 @@ def sample_scorer_event():
 def score_job_dir(tmp_path):
     """Job directory configured for score evaluation."""
     manifest = {
-        "schema_version": "2.0",
         "model_type": "experiment",
         "evaluate_strategy": "score",
         "created_at": "2025-06-01T12:00:00+00:00",
@@ -49,7 +48,6 @@ def review_job_dir(tmp_path):
     job_dir = tmp_path / "review"
     job_dir.mkdir()
     manifest = {
-        "schema_version": "2.0",
         "model_type": "experiment",
         "evaluate_strategy": "review",
         "created_at": "2025-06-01T12:00:00+00:00",
