@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from impact_engine_evaluate.review import engine as _engine_mod
-from impact_engine_evaluate.review.api import review
+from impact_engine_evaluate.review.api import compute_review, review
 from impact_engine_evaluate.review.models import DimensionResponse, ReviewResponse
 
 SAMPLE_PARSED = ReviewResponse(
@@ -88,6 +88,18 @@ def test_review_returns_review_result(mock_litellm):
     assert isinstance(result, ReviewResult)
     assert result.backend_name == "litellm"
     assert result.timestamp
+
+
+@patch.object(_engine_mod, "litellm")
+def test_compute_review_does_not_write(mock_litellm):
+    """compute_review returns a result without writing to the job directory."""
+    mock_litellm.completion.return_value = _mock_litellm_completion()
+
+    job_dir = _make_job_dir()
+    result = compute_review(job_dir, config={"backend": {"model": "mock-model"}})
+
+    assert result.overall_score == 0.80
+    assert not (Path(job_dir) / "review_result.json").exists()
 
 
 def test_review_missing_manifest():

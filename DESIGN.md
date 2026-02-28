@@ -9,8 +9,8 @@ the data? Are the diagnostics healthy?
 
 The evaluate package provides a general-purpose agentic review layer that
 accepts any job directory conforming to the manifest convention. It loads the
-manifest, selects the appropriate method reviewer, runs the review (or
-deterministic score), and returns a structured, auditable confidence judgement.
+manifest, selects the appropriate method reviewer, runs the LLM review, and
+returns a structured, auditable confidence judgement.
 
 ## Architecture overview
 
@@ -18,38 +18,26 @@ deterministic score), and returns a structured, auditable confidence judgement.
 
 ## Components
 
-### Symmetric Evaluate adapter
+### Evaluate adapter
 
-The `Evaluate` pipeline component uses symmetric strategy dispatch.  Both
-strategies share the **same flow** — only the confidence source differs:
+`Evaluate` is the pipeline component that drives the review. It reads the
+manifest, selects a `MethodReviewer` by `model_type`, loads the artifact,
+and delegates to `ReviewEngine`. `model_type` (from `manifest.json`) is the single lookup key: it selects the
+method reviewer that bundles the confidence range, prompt templates, knowledge
+base, and artifact loading logic for that methodology.
 
-```
-manifest → reviewer → scorer_event → [confidence source] → EvaluateResult → write → return
-```
+The result is written as `evaluate_result.json` and `review_result.json` to
+the job directory. The manifest is treated as read-only.
 
-1. `evaluate_strategy` (from `manifest.json`) → *how* to compute confidence
-   (score vs review)
-2. `model_type` → selects the `MethodReviewer` (single source of truth for
-   confidence range, prompt templates, knowledge, artifact loading)
-
-Both strategies construct the same `EvaluateResult`, write
-`evaluate_result.json` to the job directory, and return the same 5-key
-output dict for downstream ALLOCATE. The manifest is treated as read-only.
-
-Each strategy also writes its own strategy-specific result file:
-- Score: `score_result.json` (`ScoreResult` — confidence + audit fields)
-- Review: `review_result.json` (`ReviewResult` — dimensions + justifications)
-
-`MethodReviewer` provides a default `load_artifact()` implementation (reads
-all manifest files, extracts `sample_size` from JSON).  Subclasses override
-only when they need method-specific loading.
+`MethodReviewer` provides a default `load_artifact()` implementation that
+reads all manifest files into an `ArtifactPayload`. Subclasses override only
+when they need method-specific loading.
 
 | File | Role |
 |------|------|
-| `models.py` | `EvaluateResult` dataclass (shared stage output) |
-| `score/scorer.py` | `ScoreResult` dataclass + `score_confidence()` — seeded by `initiative_id` |
-| `job_reader.py` | `load_scorer_event(manifest, job_dir)` — reads `impact_results.json` and builds a flat scorer event dict |
-| `adapter.py` | `Evaluate` PipelineComponent — symmetric dispatch, shared `EvaluateResult` construction and I/O |
+| `models.py` | `EvaluateResult` dataclass (stage output) |
+| `job_reader.py` | `load_scorer_event(manifest, job_dir)` — reads `impact_results.json` into an event dict |
+| `adapter.py` | `Evaluate` PipelineComponent — selects reviewer, runs review, writes output |
 
 ### Review subsystem
 
@@ -104,16 +92,12 @@ The orchestrator passes a job directory reference to `Evaluate.execute()`:
 | `job_dir` | str | Path to the job directory containing `manifest.json` |
 | `cost_to_scale` | float | (optional) Override for cost from the orchestrator |
 
-The manifest's `evaluate_strategy` field (default: `"review"`) controls
-the confidence source.  Both strategies share the same symmetric flow:
-read manifest, select reviewer, load scorer event, compute confidence,
-construct `EvaluateResult`, write `evaluate_result.json`.
+`Evaluate.execute()` reads the manifest, selects the method reviewer by
+`model_type`, loads the artifact, and runs the `ReviewEngine`. The result is an
+`EvaluateResult` with `confidence = overall_score`, written to
+`evaluate_result.json`.
 
-The `evaluate_strategy` field in `manifest.json`:
-- `"score"` — seeded random draw from `confidence_range` (debug/test), writes `score_result.json`
-- `"review"` — LLM review via `ReviewEngine`, confidence = `overall_score`, writes `review_result.json`
-
-### Scorer event contract
+### Impact results contract
 
 `load_scorer_event()` reads flat top-level keys from `impact_results.json`:
 
@@ -131,16 +115,6 @@ The review path reads the same file as raw text via
 `reviewer.load_artifact()`, so the full measure output (nested model params,
 diagnostics, etc.) is preserved for the LLM reviewer even though the scorer
 only uses the flat keys above.
-
-### Score output
-
-```python
-@dataclass
-class ScoreResult:
-    initiative_id: str
-    confidence: float              # deterministic draw
-    confidence_range: tuple[float, float]  # bounds used
-```
 
 ### Review input
 
@@ -217,7 +191,6 @@ Environment variable overrides: `REVIEW_BACKEND_MODEL`,
 
 | Component | Core dependency |
 |-----------|----------------|
-| Scorer, models | stdlib (`hashlib`, `random`) |
 | LLM completions | `litellm` |
 | Template rendering | `jinja2` |
 | Config / prompt loading | `pyyaml` |
