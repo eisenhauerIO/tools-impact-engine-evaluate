@@ -1,8 +1,9 @@
 """Deterministic confidence scoring for debugging, testing, and illustration."""
 
 import hashlib
-import random
 from dataclasses import asdict, dataclass
+
+import numpy as np
 
 
 @dataclass
@@ -43,7 +44,7 @@ def score_initiative(event: dict, confidence_range: tuple[float, float]) -> dict
         from *confidence_range*, seeded by ``initiative_id``.
     """
     seed = _stable_seed(event["initiative_id"])
-    rng = random.Random(seed)
+    rng = np.random.default_rng(seed)
     confidence = rng.uniform(confidence_range[0], confidence_range[1])
 
     result = EvaluateResult(
