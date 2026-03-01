@@ -11,7 +11,7 @@ def _auto_register() -> None:
     """Import built-in methods, triggering their registration decorators."""
     import importlib
 
-    for mod in ("experiment",):
+    for mod in ("experiment", "quasi_experimental"):
         try:
             importlib.import_module(f"impact_engine_evaluate.review.methods.{mod}")
         except ImportError:

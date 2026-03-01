@@ -33,6 +33,24 @@ class BackendConfig:
 
 
 @dataclass
+class MethodConfig:
+    """Per-method prompt and knowledge base selection.
+
+    Parameters
+    ----------
+    prompt : str
+        Name of a registered prompt spec.  Empty string uses the reviewer's
+        default ``prompt_template_dir()``.
+    knowledge_base : str
+        Name of a registered knowledge base.  Empty string uses the reviewer's
+        default ``knowledge_content_dir()``.
+    """
+
+    prompt: str = ""
+    knowledge_base: str = ""
+
+
+@dataclass
 class ReviewConfig:
     """Top-level configuration for the review subsystem.
 
@@ -40,9 +58,12 @@ class ReviewConfig:
     ----------
     backend : BackendConfig
         LLM backend settings.
+    methods : dict[str, MethodConfig]
+        Per-method prompt and knowledge base overrides, keyed by ``model_type``.
     """
 
     backend: BackendConfig = field(default_factory=BackendConfig)
+    methods: dict[str, MethodConfig] = field(default_factory=dict)
 
 
 def load_config(source: str | Path | dict[str, Any] | None = None) -> ReviewConfig:
@@ -76,7 +97,16 @@ def load_config(source: str | Path | dict[str, Any] | None = None) -> ReviewConf
         extra={k: v for k, v in backend_raw.items() if k not in {"model", "temperature", "max_tokens"}},
     )
 
-    return ReviewConfig(backend=backend)
+    methods_raw = raw.get("methods", {})
+    methods = {
+        name: MethodConfig(
+            prompt=cfg.get("prompt", ""),
+            knowledge_base=cfg.get("knowledge_base", ""),
+        )
+        for name, cfg in methods_raw.items()
+    }
+
+    return ReviewConfig(backend=backend, methods=methods)
 
 
 def _load_yaml(path: Path) -> dict[str, Any]:

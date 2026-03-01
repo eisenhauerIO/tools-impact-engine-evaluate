@@ -115,3 +115,27 @@ def test_review_unknown_method():
         Path(tmpdir, "manifest.json").write_text(json.dumps(manifest))
         with pytest.raises(KeyError, match="Unknown method"):
             review(tmpdir)
+
+
+@patch.object(_engine_mod, "litellm")
+def test_compute_review_registry_dispatch(mock_litellm):
+    """compute_review resolves prompt via registry when config.methods is set."""
+    from impact_engine_evaluate.config import MethodConfig, ReviewConfig
+    from impact_engine_evaluate.review.methods.experiment.reviewer import ExperimentReviewer
+    from impact_engine_evaluate.review.prompt_registry import clear_prompt_registry, register_prompt
+
+    mock_litellm.completion.return_value = _mock_litellm_completion()
+
+    experiment_template = ExperimentReviewer().prompt_template_dir() / "experiment_review.yaml"
+    register_prompt("custom_experiment_prompt", experiment_template)
+
+    config = ReviewConfig(
+        methods={"experiment": MethodConfig(prompt="custom_experiment_prompt")},
+    )
+    job_dir = _make_job_dir()
+    result = compute_review(job_dir, config=config)
+
+    assert result.overall_score == 0.80
+    assert result.prompt_name == "experiment_review"
+
+    clear_prompt_registry()
