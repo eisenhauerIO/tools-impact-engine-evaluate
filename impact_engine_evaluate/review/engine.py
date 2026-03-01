@@ -11,7 +11,7 @@ import jinja2
 import litellm
 import yaml
 
-from impact_engine_evaluate.config import ReviewConfig, load_config
+from impact_engine_evaluate.config import load_config
 from impact_engine_evaluate.review.models import (
     ArtifactPayload,
     PromptSpec,
@@ -225,27 +225,25 @@ class ReviewEngine:
         self._results_builder = ResultsBuilder()
 
     @classmethod
-    def from_config(cls, config: ReviewConfig | dict | str | None = None) -> ReviewEngine:
-        """Construct a ReviewEngine from a config object or raw source.
+    def from_config(cls, config: dict | str | None = None) -> ReviewEngine:
+        """Construct a ReviewEngine from a config dict or raw source.
 
         Parameters
         ----------
-        config : ReviewConfig | dict | str | None
-            A ``ReviewConfig``, a dict, a YAML file path, or ``None``
-            for defaults.
+        config : dict | str | None
+            A config dict, a YAML file path, or ``None`` for defaults.
 
         Returns
         -------
         ReviewEngine
         """
-        if not isinstance(config, ReviewConfig):
-            config = load_config(config)
-
+        config = load_config(config)
+        backend = config["backend"]
         return cls(
-            default_model=config.backend.model,
-            default_temperature=config.backend.temperature,
-            default_max_tokens=config.backend.max_tokens,
-            litellm_extra=config.backend.extra,
+            default_model=backend["model"],
+            default_temperature=backend["temperature"],
+            default_max_tokens=backend["max_tokens"],
+            litellm_extra=backend.get("extra", {}),
         )
 
     def review(

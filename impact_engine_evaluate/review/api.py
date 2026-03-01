@@ -7,7 +7,7 @@ import logging
 from dataclasses import asdict
 from pathlib import Path
 
-from impact_engine_evaluate.config import MethodConfig, ReviewConfig, load_config
+from impact_engine_evaluate.config import load_config
 from impact_engine_evaluate.review.engine import ReviewEngine, load_knowledge, load_prompt_spec
 from impact_engine_evaluate.review.knowledge_registry import load_knowledge_base
 from impact_engine_evaluate.review.manifest import load_manifest
@@ -23,7 +23,7 @@ REVIEW_RESULT_FILENAME = "review_result.json"
 def compute_review(
     job_dir: str | Path,
     *,
-    config: ReviewConfig | dict | str | None = None,
+    config: dict | str | None = None,
 ) -> ReviewResult:
     """Compute a review of a job directory without writing results.
 
@@ -59,7 +59,7 @@ def compute_review(
         a configured prompt / knowledge base name is not registered.
     """
     job_dir = Path(job_dir)
-    review_config = config if isinstance(config, ReviewConfig) else load_config(config)
+    config_dict = load_config(config)
 
     manifest = load_manifest(job_dir)
     logger.info("Reviewing job_dir=%s model_type=%s", job_dir, manifest.model_type)
@@ -67,11 +67,11 @@ def compute_review(
     reviewer = MethodReviewerRegistry.create(manifest.model_type)
     artifact = reviewer.load_artifact(manifest, job_dir)
 
-    method_config = review_config.methods.get(manifest.model_type, MethodConfig())
+    method = config_dict.get("methods", {}).get(manifest.model_type, {})
 
     # Prompt: registry name takes precedence over reviewer default directory
-    if method_config.prompt:
-        spec = load_prompt(method_config.prompt)
+    if method.get("prompt", ""):
+        spec = load_prompt(method["prompt"])
     else:
         template_dir = reviewer.prompt_template_dir()
         if template_dir is None:
@@ -80,20 +80,20 @@ def compute_review(
         spec = load_prompt_spec(template_dir / f"{reviewer.prompt_name}.yaml")
 
     # Knowledge base: registry name takes precedence over reviewer default directory
-    if method_config.knowledge_base:
-        knowledge_context = load_knowledge_base(method_config.knowledge_base)
+    if method.get("knowledge_base", ""):
+        knowledge_context = load_knowledge_base(method["knowledge_base"])
     else:
         knowledge_dir = reviewer.knowledge_content_dir()
         knowledge_context = load_knowledge(knowledge_dir) if knowledge_dir is not None else ""
 
-    engine = ReviewEngine.from_config(review_config)
+    engine = ReviewEngine.from_config(config_dict)
     return engine.review(artifact, spec, knowledge_context)
 
 
 def review(
     job_dir: str | Path,
     *,
-    config: ReviewConfig | dict | str | None = None,
+    config: dict | str | None = None,
 ) -> ReviewResult:
     """Review a job directory and write results back.
 

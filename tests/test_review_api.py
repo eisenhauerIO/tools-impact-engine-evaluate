@@ -120,7 +120,6 @@ def test_review_unknown_method():
 @patch.object(_engine_mod, "litellm")
 def test_compute_review_registry_dispatch(mock_litellm):
     """compute_review resolves prompt via registry when config.methods is set."""
-    from impact_engine_evaluate.config import MethodConfig, ReviewConfig
     from impact_engine_evaluate.review.methods.experiment.reviewer import ExperimentReviewer
     from impact_engine_evaluate.review.prompt_registry import clear_prompt_registry, register_prompt
 
@@ -129,9 +128,7 @@ def test_compute_review_registry_dispatch(mock_litellm):
     experiment_template = ExperimentReviewer().prompt_template_dir() / "experiment_review.yaml"
     register_prompt("custom_experiment_prompt", experiment_template)
 
-    config = ReviewConfig(
-        methods={"experiment": MethodConfig(prompt="custom_experiment_prompt")},
-    )
+    config = {"methods": {"experiment": {"prompt": "custom_experiment_prompt"}}}
     job_dir = _make_job_dir()
     result = compute_review(job_dir, config=config)
 

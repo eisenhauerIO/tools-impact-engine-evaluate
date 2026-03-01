@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -30,6 +31,15 @@ class BackendConfig:
     temperature: float = 0.0
     max_tokens: int = 4096
     extra: dict = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        """Validate backend configuration values."""
+        if not self.model:
+            raise ValueError("model must be a non-empty string")
+        if self.temperature < 0:
+            raise ValueError(f"temperature must be >= 0, got {self.temperature}")
+        if self.max_tokens <= 0:
+            raise ValueError(f"max_tokens must be > 0, got {self.max_tokens}")
 
 
 @dataclass
@@ -66,8 +76,8 @@ class ReviewConfig:
     methods: dict[str, MethodConfig] = field(default_factory=dict)
 
 
-def load_config(source: str | Path | dict[str, Any] | None = None) -> ReviewConfig:
-    """Load a ReviewConfig from a YAML file, dict, or environment variables.
+def load_config(source: str | Path | dict[str, Any] | None = None) -> dict[str, Any]:
+    """Load review configuration from a YAML file, dict, or environment variables.
 
     Parameters
     ----------
@@ -77,7 +87,8 @@ def load_config(source: str | Path | dict[str, Any] | None = None) -> ReviewConf
 
     Returns
     -------
-    ReviewConfig
+    dict
+        Fully validated configuration dictionary.
     """
     raw: dict[str, Any] = {}
 
@@ -106,7 +117,7 @@ def load_config(source: str | Path | dict[str, Any] | None = None) -> ReviewConf
         for name, cfg in methods_raw.items()
     }
 
-    return ReviewConfig(backend=backend, methods=methods)
+    return dataclasses.asdict(ReviewConfig(backend=backend, methods=methods))
 
 
 def _load_yaml(path: Path) -> dict[str, Any]:
