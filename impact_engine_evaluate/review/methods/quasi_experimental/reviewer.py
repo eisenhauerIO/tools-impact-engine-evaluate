@@ -26,8 +26,8 @@ class QuasiExperimentalReviewer(MethodReviewer):
     confidence_range = (0.60, 0.85)
 
     def prompt_template_dir(self) -> Path:
-        """Return the quasi-experimental templates directory."""
-        return _PKG_DIR / "templates"
+        """Return the quasi-experimental prompts directory."""
+        return _PKG_DIR / "prompts"
 
     def knowledge_content_dir(self) -> Path:
         """Return the quasi-experimental knowledge directory."""

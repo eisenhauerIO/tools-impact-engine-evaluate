@@ -99,12 +99,12 @@ class MethodReviewer(ABC):
         )
 
     def prompt_template_dir(self) -> Path | None:
-        """Directory containing this reviewer's YAML prompt templates.
+        """Directory containing this reviewer's YAML prompt files.
 
         Returns
         -------
         Path | None
-            ``None`` means no method-specific templates.
+            ``None`` means no method-specific prompts.
         """
         return None
 

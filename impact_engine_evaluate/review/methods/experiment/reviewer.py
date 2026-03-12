@@ -26,8 +26,8 @@ class ExperimentReviewer(MethodReviewer):
     confidence_range = (0.85, 1.0)
 
     def prompt_template_dir(self) -> Path:
-        """Return the experiment-specific templates directory."""
-        return _PKG_DIR / "templates"
+        """Return the experiment-specific prompts directory."""
+        return _PKG_DIR / "prompts"
 
     def knowledge_content_dir(self) -> Path:
         """Return the experiment-specific knowledge directory."""

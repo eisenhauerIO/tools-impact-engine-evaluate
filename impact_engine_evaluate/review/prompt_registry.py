@@ -19,9 +19,9 @@ def _ensure_defaults_loaded() -> None:
     """Lazily register built-in prompt templates on first access."""
     global _defaults_loaded
     if not _defaults_loaded:
-        _registry["experiment_review"] = _METHODS_DIR / "experiment" / "templates" / "experiment_review.yaml"
+        _registry["experiment_review"] = _METHODS_DIR / "experiment" / "prompts" / "experiment_review.yaml"
         _registry["quasi_experimental_review"] = (
-            _METHODS_DIR / "quasi_experimental" / "templates" / "quasi_experimental_review.yaml"
+            _METHODS_DIR / "quasi_experimental" / "prompts" / "quasi_experimental_review.yaml"
         )
         _defaults_loaded = True
 
