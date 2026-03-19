@@ -48,18 +48,15 @@ experiment (RCT) uses `(0.85, 1.0)` because randomized designs produce the
 strongest causal evidence. A less rigorous methodology would declare a lower
 range.
 
-The returned dict contains eight keys:
+The returned `EvaluateResult` contains five fields:
 
-| Key | Description |
-|-----|-------------|
+| Field | Description |
+|-------|-------------|
 | `initiative_id` | Initiative identifier |
 | `confidence` | Confidence score (0.0–1.0) |
-| `cost` | Cost to scale |
-| `return_best` | Upper confidence interval bound |
-| `return_median` | Point estimate |
-| `return_worst` | Lower confidence interval bound |
-| `model_type` | Measurement methodology label |
-| `sample_size` | Study sample size |
+| `confidence_range` | `(lower, upper)` bounds from the method reviewer |
+| `strategy` | Strategy that produced the result (`"score"` or `"review"`) |
+| `report` | Descriptive string summarising the score |
 
 ---
 

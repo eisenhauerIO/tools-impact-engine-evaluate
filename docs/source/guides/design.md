@@ -81,7 +81,6 @@ only when they need method-specific loading.
 | `models.py` | `EvaluateResult` dataclass (shared stage output) |
 | `score/scorer.py` | `ScoreResult` dataclass + `score_confidence()` — seeded by `initiative_id` |
 | `job_reader.py` | `load_scorer_event()` — reads `impact_results.json` and builds a flat scorer event dict |
-| `adapter.py` | `Evaluate` PipelineComponent — symmetric dispatch, shared `EvaluateResult` construction and I/O |
 
 ### Review subsystem
 

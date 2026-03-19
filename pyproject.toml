@@ -40,6 +40,7 @@ dependencies = [
 
 [tool.hatch.envs.docs.scripts]
 build = "sphinx-build -b html docs/source docs/build/html"
+serve = ["sphinx-build -b html docs/source docs/build/html", "python -m http.server 8000 --directory docs/build/html"]
 
 [tool.ruff]
 extend-exclude = ["_external", "docs/build"]

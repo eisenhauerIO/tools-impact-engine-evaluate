@@ -10,7 +10,8 @@ the orchestrator.
 ## Development setup
 
 ```bash
-pip install -e ".[dev]"
+pip install hatch
+hatch env create
 ```
 
 ## Common commands
@@ -24,7 +25,6 @@ pip install -e ".[dev]"
 - `impact_engine_evaluate/models.py` — `EvaluateResult` dataclass (shared stage output)
 - `impact_engine_evaluate/score/scorer.py` — `ScoreResult` dataclass + `score_confidence()` (pure, no orchestrator dependency)
 - `impact_engine_evaluate/job_reader.py` — reads job directory artifacts into scorer event dicts
-- `impact_engine_evaluate/adapter.py` — orchestrator integration (`Evaluate`), symmetric strategy dispatch + shared I/O
 - `impact_engine_evaluate/config.py` — review configuration (YAML/dict/env vars)
 - `impact_engine_evaluate/review/engine.py` — `ReviewEngine` calls `litellm.completion()` with structured output
 - `impact_engine_evaluate/review/api.py` — public `review(job_dir)` entry point
