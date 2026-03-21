@@ -9,11 +9,11 @@ from pathlib import Path
 
 from impact_engine_evaluate.config import load_config
 from impact_engine_evaluate.review.engine import ReviewEngine, load_knowledge, load_prompt_spec
-from impact_engine_evaluate.review.knowledge_registry import load_knowledge_base
+from impact_engine_evaluate.review.knowledge_registry import KNOWLEDGE_BASE_REGISTRY
 from impact_engine_evaluate.review.manifest import load_manifest
 from impact_engine_evaluate.review.methods import MethodReviewerRegistry
 from impact_engine_evaluate.review.models import ReviewResult
-from impact_engine_evaluate.review.prompt_registry import load_prompt
+from impact_engine_evaluate.review.prompt_registry import PROMPT_REGISTRY
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +71,7 @@ def compute_review(
 
     # Prompt: registry name takes precedence over reviewer default directory
     if method.get("prompt", ""):
-        spec = load_prompt(method["prompt"])
+        spec = PROMPT_REGISTRY.load(method["prompt"])
     else:
         template_dir = reviewer.prompt_template_dir()
         if template_dir is None:
@@ -81,7 +81,7 @@ def compute_review(
 
     # Knowledge base: registry name takes precedence over reviewer default directory
     if method.get("knowledge_base", ""):
-        knowledge_context = load_knowledge_base(method["knowledge_base"])
+        knowledge_context = KNOWLEDGE_BASE_REGISTRY.load(method["knowledge_base"])
     else:
         knowledge_dir = reviewer.knowledge_content_dir()
         knowledge_context = load_knowledge(knowledge_dir) if knowledge_dir is not None else ""

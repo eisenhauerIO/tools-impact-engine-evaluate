@@ -1,86 +1,137 @@
-"""Registry for named prompt template YAML files."""
+"""Class-based registry for named prompt templates."""
 
 from __future__ import annotations
 
 import logging
+from abc import ABC, abstractmethod
 from pathlib import Path
 
-from impact_engine_evaluate.review.engine import load_prompt_spec
+from impact_engine_evaluate.review.engine import PromptBuilder
 from impact_engine_evaluate.review.models import PromptSpec
 
 logger = logging.getLogger(__name__)
 
 _METHODS_DIR = Path(__file__).parent / "methods"
-_registry: dict[str, Path] = {}
-_defaults_loaded = False
+_prompt_builder = PromptBuilder()
 
 
-def _ensure_defaults_loaded() -> None:
-    """Lazily register built-in prompt templates on first access."""
-    global _defaults_loaded
-    if not _defaults_loaded:
-        _registry["experiment_review"] = _METHODS_DIR / "experiment" / "prompts" / "experiment_review.yaml"
-        _registry["quasi_experimental_review"] = (
-            _METHODS_DIR / "quasi_experimental" / "prompts" / "quasi_experimental_review.yaml"
-        )
-        _defaults_loaded = True
+class Prompt(ABC):
+    """Abstract base class for prompt template implementations.
+
+    Subclass and implement :meth:`load` to provide custom prompt content
+    from any source (filesystem, database, generated dynamically, etc.).
+    """
+
+    @abstractmethod
+    def load(self) -> PromptSpec:
+        """Return the prompt specification.
+
+        Returns
+        -------
+        PromptSpec
+        """
 
 
-def register_prompt(name: str, path: str | Path) -> None:
-    """Register a prompt YAML file under *name*.
+class FilePrompt(Prompt):
+    """Prompt backed by a YAML template file.
 
     Parameters
     ----------
-    name : str
-        Registry key used to look up this prompt.
     path : str | Path
         Path to a YAML prompt template file.
     """
-    _registry[name] = Path(path)
-    logger.debug("Registered prompt %r → %s", name, path)
+
+    def __init__(self, path: str | Path) -> None:
+        self._path = Path(path)
+
+    def load(self) -> PromptSpec:
+        """Load and return the :class:`PromptSpec` from the YAML file.
+
+        Returns
+        -------
+        PromptSpec
+
+        Raises
+        ------
+        FileNotFoundError
+            If the path does not exist.
+        """
+        return _prompt_builder.load_spec(self._path)
 
 
-def load_prompt(name: str) -> PromptSpec:
-    """Load and return the PromptSpec registered under *name*.
+class PromptRegistry:
+    """Registry mapping names to :class:`Prompt` instances."""
 
-    Parameters
-    ----------
-    name : str
-        Registered prompt name.
+    def __init__(self) -> None:
+        self._registry: dict[str, Prompt] = {}
+        self._defaults_loaded = False
 
-    Returns
-    -------
-    PromptSpec
+    def _ensure_defaults(self) -> None:
+        if not self._defaults_loaded:
+            self.register(
+                "experiment_review",
+                FilePrompt(_METHODS_DIR / "experiment" / "prompts" / "experiment_review.yaml"),
+            )
+            self.register(
+                "quasi_experimental_review",
+                FilePrompt(_METHODS_DIR / "quasi_experimental" / "prompts" / "quasi_experimental_review.yaml"),
+            )
+            self._defaults_loaded = True
 
-    Raises
-    ------
-    KeyError
-        If *name* is not registered.
-    """
-    _ensure_defaults_loaded()
-    if name not in _registry:
-        available = ", ".join(sorted(_registry)) or "(none)"
-        msg = f"Prompt {name!r} not registered. Available: {available}"
-        raise KeyError(msg)
-    return load_prompt_spec(_registry[name])
+    def register(self, name: str, prompt: Prompt) -> None:
+        """Register a prompt under *name*.
+
+        Parameters
+        ----------
+        name : str
+            Registry key used to look up this prompt.
+        prompt : Prompt
+            Prompt instance to register.
+        """
+        self._registry[name] = prompt
+        logger.debug("Registered prompt %r", name)
+
+    def load(self, name: str) -> PromptSpec:
+        """Load the :class:`PromptSpec` registered under *name*.
+
+        Parameters
+        ----------
+        name : str
+            Registered prompt name.
+
+        Returns
+        -------
+        PromptSpec
+
+        Raises
+        ------
+        KeyError
+            If *name* is not registered.
+        """
+        self._ensure_defaults()
+        if name not in self._registry:
+            available = ", ".join(sorted(self._registry)) or "(none)"
+            msg = f"Prompt {name!r} not registered. Available: {available}"
+            raise KeyError(msg)
+        return self._registry[name].load()
+
+    def list(self) -> list[str]:
+        """Return sorted list of registered prompt names.
+
+        Returns
+        -------
+        list[str]
+        """
+        self._ensure_defaults()
+        return sorted(self._registry)
+
+    def clear(self) -> None:
+        """Reset the registry and defaults flag.
+
+        Intended for use in tests to ensure a clean state.
+        """
+        self._registry.clear()
+        self._defaults_loaded = False
 
 
-def list_prompts() -> list[str]:
-    """Return sorted list of registered prompt names.
-
-    Returns
-    -------
-    list[str]
-    """
-    _ensure_defaults_loaded()
-    return sorted(_registry)
-
-
-def clear_prompt_registry() -> None:
-    """Reset the registry and defaults flag.
-
-    Intended for use in tests to ensure a clean state.
-    """
-    global _defaults_loaded
-    _registry.clear()
-    _defaults_loaded = False
+PROMPT_REGISTRY = PromptRegistry()
