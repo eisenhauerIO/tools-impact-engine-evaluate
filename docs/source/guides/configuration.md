@@ -93,7 +93,7 @@ All review dependencies are core requirements (installed automatically):
 
 | Package | Role |
 |---------|------|
-| [LiteLLM](https://docs.litellm.ai/) | 100+ LLM providers via unified API |
+| LiteLLM | 100+ LLM providers via unified API |
 | [Jinja2](https://jinja.palletsprojects.com/) | Prompt template rendering |
 | [PyYAML](https://pyyaml.org/) | YAML config and prompt loading |
 

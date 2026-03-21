@@ -50,7 +50,7 @@ Artifacts ──► Review strategy   ──► per-dimension scores + justifica
 
 ## Components
 
-### Symmetric Evaluate adapter
+### Symmetric `Evaluate` adapter
 
 The `Evaluate` pipeline component uses symmetric strategy dispatch.  Both
 strategies share the **same flow** — only the confidence source differs:
