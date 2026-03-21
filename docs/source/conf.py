@@ -24,12 +24,20 @@ extensions = [
 # -- nbsphinx configuration --------------------------------------------------
 nbsphinx_execute = "auto"
 nbsphinx_allow_errors = False
-nbsphinx_prolog = """
-{% set basename = env.docname.split("/")[-1] + ".ipynb" %}
+_gh_repo = "https://github.com/eisenhauerIO/tools-impact-engine-evaluate"
+_colab = "https://colab.research.google.com/github/eisenhauerIO/tools-impact-engine-evaluate"
+nbsphinx_prolog = rf"""
+{{% set docname = env.doc2path(env.docname, base=None) %}}
+
+.. |colab| image:: https://colab.research.google.com/assets/colab-badge.svg
+    :target: {_colab}/blob/main/docs/source/{{{{ docname }}}}
 
 .. only:: html
 
-    :download:`Download this notebook <{{ basename }}>`
+    .. nbinfo::
+        Download the notebook `here <{_gh_repo}/blob/main/docs/source/{{{{ docname }}}}>`__!
+        Interactive online version: |colab|
+
 """
 
 templates_path = ["_templates"]
