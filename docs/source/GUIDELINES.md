@@ -14,9 +14,8 @@ This file documents conventions specific to the evaluate component.
 | `guides/configuration.md` | Parameter reference for review backend configuration (model, temperature, etc.). |
 | `guides/design.md` | Architecture, strategy dispatch, registry pattern, data flow. |
 | `guides/api_reference.rst` | Auto-generated from source. Do not hand-edit. |
-| `tutorials/demo_deterministic_scoring.ipynb` | Lightweight scoring path — no API key required. |
-| `tutorials/demo_agentic_review.ipynb` | LLM-powered review via Anthropic API. Pre-computed output. |
-| `tutorials/demo_ollama_review.ipynb` | LLM-powered review via local Ollama. Pre-computed output. |
+| `tutorials/demo_deterministic_scoring.ipynb` | Lightweight scoring path — no API key required. Executable. |
+| `tutorials/llm/demo_ollama_review.ipynb` | LLM-powered review via local Ollama. Pre-computed output. Non-executable. |
 
 ---
 
@@ -33,11 +32,10 @@ Tutorials  → demo notebooks
 
 ### Executable vs non-executable
 
-- `demo_deterministic_scoring.ipynb` — no external dependencies, executes on every Sphinx build.
-- `demo_agentic_review.ipynb` and `demo_ollama_review.ipynb` — require live LLM backends.
-  These include pre-computed output and are marked non-executable via notebook metadata
-  (`nbsphinx_execute = "never"` in the notebook's metadata block). They are excluded from
-  the Sphinx build via `conf.py` `exclude_patterns` to avoid execution errors in CI.
+Notebooks are split by directory following the ecosystem-wide convention:
 
-This split ensures CI passes without API keys while still shipping runnable notebooks
-for users who have the backends configured.
+- `tutorials/` — executable notebooks; self-contained, run on every commit via pytest
+- `tutorials/llm/` — non-executable notebooks requiring live LLM backends; keep pre-rendered
+  outputs (excluded from nbstripout); not in testpaths so CI never attempts to run them
+
+Docs visitors see both in the sidebar — the directory split is invisible to them.

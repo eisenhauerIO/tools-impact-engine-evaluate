@@ -14,7 +14,7 @@ requires-python = ">=3.10"
 dependencies = ["numpy", "litellm>=1.50", "jinja2>=3.1", "pyyaml>=6.0"]
 
 [project.optional-dependencies]
-dev = ["pytest", "ruff", "pre-commit"]
+dev = ["pytest", "nbmake", "ruff", "pre-commit"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["impact_engine_evaluate"]
@@ -23,7 +23,7 @@ packages = ["impact_engine_evaluate"]
 features = ["dev"]
 
 [tool.hatch.envs.default.scripts]
-test = "pytest tests/ -v"
+test = "pytest"
 lint = "ruff check . && ruff format --check ."
 format = "ruff format ."
 
@@ -58,5 +58,5 @@ convention = "numpy"
 "examples/**" = ["D"]
 
 [tool.pytest.ini_options]
-addopts = "-v"
-testpaths = ["tests"]
+addopts = "-v --nbmake --ignore=docs/source/tutorials/llm"
+testpaths = ["tests", "docs/source/tutorials"]

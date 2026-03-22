@@ -18,5 +18,5 @@ guides/api_reference
 :caption: Tutorials
 
 tutorials/demo_deterministic_scoring
-tutorials/demo_ollama_review
+tutorials/llm/demo_ollama_review
 ```
