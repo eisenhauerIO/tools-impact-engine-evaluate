@@ -1,1 +1,0 @@
-../../.cache/utils-agentic-support/claude/ecosystems/impact-engine/feature-types/adapter.md
