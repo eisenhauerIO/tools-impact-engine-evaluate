@@ -66,8 +66,7 @@ method reviewer subclass is tagged with its manifest `model_type` key:
 
 ```python
 @MethodReviewerRegistry.register("experiment")
-class ExperimentReviewer(MethodReviewer):
-    ...
+class ExperimentReviewer(MethodReviewer): ...
 ```
 
 `MethodReviewerRegistry.create(model_type)` instantiates the matching
@@ -124,10 +123,10 @@ The `ArtifactPayload` envelope:
 @dataclass
 class ArtifactPayload:
     initiative_id: str
-    artifact_text: str       # serialized upstream results
-    model_type: str          # methodology label
+    artifact_text: str  # serialized upstream results
+    model_type: str  # methodology label
     sample_size: int
-    metadata: dict           # additional context
+    metadata: dict  # additional context
 ```
 
 ### Review output
@@ -136,14 +135,14 @@ class ArtifactPayload:
 @dataclass
 class ReviewResult:
     initiative_id: str
-    prompt_name: str         # which template was used
+    prompt_name: str  # which template was used
     prompt_version: str
-    backend_name: str        # which LLM backend
-    model: str               # which model
+    backend_name: str  # which LLM backend
+    model: str  # which model
     dimensions: list[ReviewDimension]  # per-axis scores
-    overall_score: float     # LLM-reported aggregate score
-    raw_response: str        # full LLM output for audit
-    timestamp: str           # ISO-8601
+    overall_score: float  # LLM-reported aggregate score
+    raw_response: str  # full LLM output for audit
+    timestamp: str  # ISO-8601
 ```
 
 ## Prompt template contract

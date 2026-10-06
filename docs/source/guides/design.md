@@ -158,7 +158,7 @@ The orchestrator passes a job directory reference to `Evaluate.execute()`:
 @dataclass
 class ScoreResult:
     initiative_id: str
-    confidence: float              # deterministic draw
+    confidence: float  # deterministic draw
     confidence_range: tuple[float, float]  # bounds used
 ```
 
@@ -170,10 +170,10 @@ The `ArtifactPayload` envelope:
 @dataclass
 class ArtifactPayload:
     initiative_id: str
-    artifact_text: str       # serialized upstream results
-    model_type: str          # methodology label
+    artifact_text: str  # serialized upstream results
+    model_type: str  # methodology label
     sample_size: int
-    metadata: dict           # additional context
+    metadata: dict  # additional context
 ```
 
 ### Review output
@@ -182,14 +182,14 @@ class ArtifactPayload:
 @dataclass
 class ReviewResult:
     initiative_id: str
-    prompt_name: str         # which template was used
+    prompt_name: str  # which template was used
     prompt_version: str
-    backend_name: str        # which LLM backend
-    model: str               # which model
+    backend_name: str  # which LLM backend
+    model: str  # which model
     dimensions: list[ReviewDimension]  # per-axis scores
-    overall_score: float     # aggregated (mean of dimensions)
-    raw_response: str        # full LLM output for audit
-    timestamp: str           # ISO-8601
+    overall_score: float  # aggregated (mean of dimensions)
+    raw_response: str  # full LLM output for audit
+    timestamp: str  # ISO-8601
 ```
 
 ---

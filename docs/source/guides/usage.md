@@ -103,9 +103,11 @@ from impact_engine_evaluate import Evaluate
 
 evaluator = Evaluate(config="review_config.yaml")
 
-result = evaluator.execute({
-    "job_dir": "path/to/job-impact-engine-XXXX/",
-})
+result = evaluator.execute(
+    {
+        "job_dir": "path/to/job-impact-engine-XXXX/",
+    }
+)
 ```
 
 The `evaluate_strategy` field in `manifest.json` controls the path:
